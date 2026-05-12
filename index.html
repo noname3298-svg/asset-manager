@@ -1,0 +1,2295 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<meta name="theme-color" content="#0a0a0f">
+<meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate, max-age=0">
+<meta http-equiv="Pragma" content="no-cache">
+<meta http-equiv="Expires" content="0">
+<!-- VERSION:BUILD_TIME -->
+<title>資産管理</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Noto+Sans+JP:wght@300;400;500;700&family=DM+Mono:wght@400;500&display=swap" rel="stylesheet">
+<style>
+:root {
+  --bg: #0a0a0f;
+  --bg2: #13131a;
+  --bg3: #1c1c26;
+  --border: rgba(255,255,255,0.08);
+  --text: #f0f0f5;
+  --text2: #8888aa;
+  --text3: #55556a;
+  --accent: #6c8fff;
+  --accent2: #4a6bff;
+  --green: #3ddc84;
+  --green-bg: rgba(61,220,132,0.1);
+  --red: #ff5f6d;
+  --red-bg: rgba(255,95,109,0.1);
+  --amber: #ffb347;
+  --amber-bg: rgba(255,179,71,0.1);
+  --blue: #6c8fff;
+  --blue-bg: rgba(108,143,255,0.1);
+  --safe-bottom: env(safe-area-inset-bottom, 0px);
+  --safe-top: env(safe-area-inset-top, 0px);
+}
+*, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+html, body { height: 100%; background: var(--bg); color: var(--text); font-family: 'Noto Sans JP', sans-serif; font-size: 14px; overflow: hidden; }
+#app { display: flex; flex-direction: column; height: 100vh; height: 100dvh; max-width: 480px; margin: 0 auto; position: relative; }
+
+/* HEADER */
+.header { 
+  padding: calc(var(--safe-top) + 12px) 20px 12px;
+  background: var(--bg); 
+  border-bottom: 1px solid var(--border);
+  display: flex; align-items: center; justify-content: space-between;
+  flex-shrink: 0;
+  position: sticky; top: 0; z-index: 10;
+}
+.header-title { font-size: 16px; font-weight: 500; letter-spacing: 0.02em; }
+.header-sub { font-size: 11px; color: var(--text3); margin-top: 1px; font-family: 'DM Mono', monospace; }
+
+/* SCROLL AREA */
+.scroll-area { flex: 1; overflow-y: auto; overflow-x: hidden; -webkit-overflow-scrolling: touch; padding-bottom: calc(var(--safe-bottom) + 70px); }
+.scroll-area::-webkit-scrollbar { display: none; }
+
+/* BOTTOM TAB */
+.tab-bar {
+  position: fixed; bottom: 0; left: 50%; transform: translateX(-50%);
+  width: 100%; max-width: 480px;
+  background: rgba(10,10,15,0.95);
+  backdrop-filter: blur(20px);
+  border-top: 1px solid var(--border);
+  display: flex;
+  padding-bottom: var(--safe-bottom);
+  z-index: 20;
+}
+.tab-item {
+  flex: 1; display: flex; flex-direction: column; align-items: center;
+  padding: 10px 4px 8px; cursor: pointer; transition: all 0.2s;
+  -webkit-tap-highlight-color: transparent;
+  min-height: 56px; gap: 3px;
+}
+.tab-icon { font-size: 18px; line-height: 1; transition: transform 0.2s; }
+.tab-label { font-size: 9px; color: var(--text3); transition: color 0.2s; white-space: nowrap; }
+.tab-item.active .tab-label { color: var(--accent); }
+.tab-item.active .tab-icon { transform: scale(1.15); }
+
+/* SCREENS */
+.screen { display: none; padding: 16px; }
+.screen.active { display: block; }
+
+/* CARDS */
+.card {
+  background: var(--bg2);
+  border: 1px solid var(--border);
+  border-radius: 16px;
+  padding: 16px;
+  margin-bottom: 12px;
+}
+.card-sm { padding: 12px 14px; border-radius: 12px; }
+
+/* METRIC GRID */
+.metric-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; margin-bottom: 12px; }
+.metric-card { background: var(--bg2); border: 1px solid var(--border); border-radius: 14px; padding: 14px; }
+.metric-label { font-size: 10px; color: var(--text2); margin-bottom: 4px; }
+.metric-value { font-size: 18px; font-weight: 700; font-family: 'DM Mono', monospace; letter-spacing: -0.02em; }
+.metric-sub { font-size: 10px; color: var(--text3); margin-top: 3px; }
+.metric-card.full { grid-column: span 2; }
+.metric-card.accent { border-color: rgba(108,143,255,0.3); background: rgba(108,143,255,0.05); }
+
+/* SECTION TITLE */
+.section-title { font-size: 11px; font-weight: 500; color: var(--text3); text-transform: uppercase; letter-spacing: 0.08em; margin-bottom: 10px; margin-top: 4px; }
+
+/* PILL / BADGE */
+.pill { display: inline-flex; align-items: center; font-size: 10px; padding: 2px 8px; border-radius: 20px; font-weight: 500; white-space: nowrap; }
+.pill-red { background: var(--red-bg); color: var(--red); }
+.pill-green { background: var(--green-bg); color: var(--green); }
+.pill-amber { background: var(--amber-bg); color: var(--amber); }
+.pill-blue { background: var(--blue-bg); color: var(--blue); }
+.pill-gray { background: rgba(255,255,255,0.06); color: var(--text2); }
+
+/* LIST ROWS */
+.list-row {
+  display: flex; align-items: center; justify-content: space-between;
+  padding: 12px 0;
+  border-bottom: 1px solid var(--border);
+}
+.list-row:last-child { border-bottom: none; }
+.list-row-left { flex: 1; min-width: 0; }
+.list-row-right { text-align: right; flex-shrink: 0; margin-left: 12px; }
+.list-name { font-size: 13px; font-weight: 500; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.list-sub { font-size: 11px; color: var(--text2); margin-top: 2px; }
+.list-amount { font-size: 13px; font-weight: 700; font-family: 'DM Mono', monospace; }
+.list-amount-sub { font-size: 10px; color: var(--text3); margin-top: 2px; }
+
+/* PROGRESS BAR */
+.progress-wrap { margin-top: 6px; }
+.progress-track { height: 4px; background: var(--bg3); border-radius: 2px; overflow: hidden; }
+.progress-fill { height: 100%; border-radius: 2px; transition: width 0.6s ease; }
+
+/* FAB */
+.fab {
+  position: fixed; bottom: calc(var(--safe-bottom) + 72px); right: 20px;
+  width: 52px; height: 52px; border-radius: 50%;
+  background: var(--accent); color: white;
+  border: none; font-size: 24px; cursor: pointer;
+  display: flex; align-items: center; justify-content: center;
+  box-shadow: 0 4px 20px rgba(108,143,255,0.4);
+  transition: transform 0.2s, box-shadow 0.2s;
+  z-index: 15;
+  -webkit-tap-highlight-color: transparent;
+}
+.fab:active { transform: scale(0.93); box-shadow: 0 2px 10px rgba(108,143,255,0.3); }
+
+/* MODAL / BOTTOM SHEET */
+.overlay { 
+  display: none; position: fixed; inset: 0; 
+  background: rgba(0,0,0,0.7); backdrop-filter: blur(4px);
+  z-index: 30; align-items: flex-end;
+}
+.overlay.open { display: flex; }
+.sheet {
+  width: 100%; max-width: 480px; margin: 0 auto;
+  background: var(--bg2);
+  border-radius: 24px 24px 0 0;
+  border-top: 1px solid var(--border);
+  padding: 12px 20px calc(var(--safe-bottom) + 24px);
+  max-height: 85vh; overflow-y: auto;
+  animation: slideUp 0.3s ease;
+}
+@keyframes slideUp { from { transform: translateY(100%); } to { transform: translateY(0); } }
+.sheet-handle { width: 36px; height: 4px; background: var(--border); border-radius: 2px; margin: 0 auto 16px; }
+.sheet-title { font-size: 16px; font-weight: 600; margin-bottom: 20px; }
+
+/* FORM */
+.form-group { margin-bottom: 14px; }
+.form-label { font-size: 11px; color: var(--text2); margin-bottom: 6px; display: block; }
+.form-input {
+  width: 100%; background: var(--bg3); border: 1px solid var(--border);
+  border-radius: 10px; padding: 12px 14px;
+  color: var(--text); font-size: 16px; font-family: 'Noto Sans JP', sans-serif;
+  outline: none; transition: border-color 0.2s; min-height: 44px;
+}
+.form-input:focus { border-color: var(--accent); }
+.form-select { appearance: none; cursor: pointer; }
+.form-btn {
+  width: 100%; padding: 14px; border: none; border-radius: 12px;
+  background: var(--accent); color: white; font-size: 15px; font-weight: 600;
+  font-family: 'Noto Sans JP', sans-serif; cursor: pointer;
+  transition: opacity 0.2s, transform 0.1s; min-height: 48px;
+  -webkit-tap-highlight-color: transparent;
+}
+.form-btn:active { opacity: 0.85; transform: scale(0.98); }
+.form-btn-danger { background: var(--red); }
+
+/* TEMPLATE BUTTONS */
+.template-grid { display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 8px; margin-bottom: 20px; }
+.template-btn {
+  padding: 10px 6px; border-radius: 10px; border: 1px solid var(--border);
+  background: var(--bg3); color: var(--text); font-size: 11px; font-weight: 500;
+  font-family: 'Noto Sans JP', sans-serif; cursor: pointer; text-align: center;
+  transition: all 0.15s; -webkit-tap-highlight-color: transparent;
+}
+.template-btn:active { transform: scale(0.96); }
+.template-btn.income { border-color: rgba(61,220,132,0.3); background: var(--green-bg); color: var(--green); }
+.template-btn.expense { border-color: rgba(255,95,109,0.3); background: var(--red-bg); color: var(--red); }
+.template-btn.invest { border-color: rgba(255,179,71,0.3); background: var(--amber-bg); color: var(--amber); }
+
+/* SLIDER */
+.slider-wrap { margin-top: 8px; }
+input[type=range] {
+  width: 100%; height: 44px; cursor: pointer;
+  -webkit-appearance: none; background: transparent;
+}
+input[type=range]::-webkit-slider-runnable-track {
+  height: 4px; border-radius: 2px; background: var(--bg3);
+}
+input[type=range]::-webkit-slider-thumb {
+  -webkit-appearance: none; width: 22px; height: 22px;
+  border-radius: 50%; background: var(--accent);
+  margin-top: -9px; box-shadow: 0 2px 8px rgba(108,143,255,0.4);
+}
+input[type=range]::-moz-range-track { height: 4px; border-radius: 2px; background: var(--bg3); }
+input[type=range]::-moz-range-thumb { width: 22px; height: 22px; border: none; border-radius: 50%; background: var(--accent); }
+
+/* STARS */
+.stars { display: flex; gap: 6px; }
+.star { font-size: 24px; cursor: pointer; transition: transform 0.1s; opacity: 0.3; -webkit-tap-highlight-color: transparent; }
+.star.active { opacity: 1; transform: scale(1.1); }
+
+/* GALLERY GRID */
+.gallery-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; }
+.gallery-card { background: var(--bg2); border: 1px solid var(--border); border-radius: 14px; padding: 14px; cursor: pointer; }
+.gallery-title { font-size: 12px; font-weight: 600; margin-bottom: 6px; line-height: 1.4; }
+.gallery-amount { font-size: 11px; color: var(--text2); font-family: 'DM Mono', monospace; margin-top: 6px; }
+.gallery-insight { font-size: 10px; color: var(--text3); margin-top: 4px; line-height: 1.5; display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; overflow: hidden; }
+
+/* CHART (pure CSS bars) */
+.bar-chart { display: flex; align-items: flex-end; gap: 4px; height: 80px; padding: 0 2px; }
+.bar-col { display: flex; flex-direction: column; align-items: center; flex: 1; height: 100%; justify-content: flex-end; gap: 2px; }
+.bar-seg { border-radius: 3px 3px 0 0; width: 100%; min-height: 2px; transition: height 0.5s ease; }
+.bar-xl { font-size: 8px; color: var(--text3); margin-top: 4px; text-align: center; }
+
+/* NET WORTH */
+.net-display { text-align: center; padding: 24px 0 16px; }
+.net-amount { font-size: 36px; font-weight: 700; font-family: 'DM Mono', monospace; letter-spacing: -0.03em; }
+.net-label { font-size: 12px; color: var(--text2); margin-top: 4px; }
+
+/* EMPTY STATE */
+.empty { text-align: center; padding: 48px 20px; color: var(--text3); }
+.empty-icon { font-size: 36px; margin-bottom: 12px; }
+.empty-text { font-size: 13px; line-height: 1.6; }
+
+/* SCENARIO LIST */
+.scenario-row { display: flex; align-items: center; justify-content: space-between; padding: 12px 0; border-bottom: 1px solid var(--border); }
+.scenario-row:last-child { border-bottom: none; }
+.scenario-load { background: var(--blue-bg); color: var(--accent); border: none; border-radius: 8px; padding: 6px 12px; font-size: 11px; font-family: 'Noto Sans JP', sans-serif; cursor: pointer; }
+
+/* ALERT */
+.alert { padding: 10px 14px; border-radius: 10px; font-size: 12px; margin-bottom: 10px; line-height: 1.5; }
+.alert-red { background: var(--red-bg); border: 1px solid rgba(255,95,109,0.2); color: var(--red); }
+.alert-green { background: var(--green-bg); border: 1px solid rgba(61,220,132,0.2); color: var(--green); }
+.alert-amber { background: var(--amber-bg); border: 1px solid rgba(255,179,71,0.2); color: var(--amber); }
+
+/* DIVIDER */
+.divider { height: 1px; background: var(--border); margin: 4px 0; }
+
+/* TABS INSIDE SCREEN */
+.sub-tabs { display: flex; gap: 4px; background: var(--bg3); border-radius: 10px; padding: 4px; margin-bottom: 14px; }
+.sub-tab { flex: 1; text-align: center; padding: 8px; border-radius: 8px; font-size: 12px; cursor: pointer; color: var(--text2); transition: all 0.2s; -webkit-tap-highlight-color: transparent; }
+.sub-tab.active { background: var(--bg2); color: var(--text); font-weight: 500; }
+
+/* LIST ROWS */
+.swipe-wrap { position: relative; border-bottom: 1px solid var(--border); }
+.swipe-wrap:last-child { border-bottom: none; }
+.swipe-content { display: flex; align-items: center; justify-content: space-between; padding: 12px 0; }
+.swipe-actions { display: none; }
+/* ROW ACTION BUTTONS — always visible, right side */
+.row-actions { display: flex; gap: 4px; flex-shrink: 0; margin-left: 8px; }
+.swipe-edit { background: var(--bg3); border: 1px solid var(--border); color: var(--accent); border-radius: 8px; width: 36px; height: 36px; font-size: 15px; cursor: pointer; display: flex; align-items: center; justify-content: center; -webkit-tap-highlight-color: transparent; flex-shrink: 0; }
+.swipe-delete { background: var(--bg3); border: 1px solid var(--border); color: var(--red); border-radius: 8px; width: 36px; height: 36px; font-size: 15px; cursor: pointer; display: flex; align-items: center; justify-content: center; -webkit-tap-highlight-color: transparent; flex-shrink: 0; }
+.swipe-edit:active { background: var(--accent); color: white; }
+.swipe-delete:active { background: var(--red); color: white; }
+
+/* DELETE BUTTON (kept for gallery) */
+.delete-btn { background: none; border: none; color: var(--text3); font-size: 18px; cursor: pointer; padding: 4px; -webkit-tap-highlight-color: transparent; flex-shrink: 0; }
+.delete-btn:active { color: var(--red); }
+
+/* EDIT BUTTON (kept for gallery) */
+.edit-btn { background: none; border: none; font-size: 15px; cursor: pointer; padding: 4px; -webkit-tap-highlight-color: transparent; flex-shrink: 0; opacity: 0.6; }
+.edit-btn:active { opacity: 1; }
+
+/* ANIMATIONS */
+@keyframes fadeIn { from { opacity: 0; transform: translateY(8px); } to { opacity: 1; transform: translateY(0); } }
+.screen.active { animation: fadeIn 0.25s ease; }
+
+/* NUMBER TRANSITION */
+.num-transition { transition: all 0.4s ease; }
+
+/* PRIORITY TAG */
+.priority-badge { display: inline-flex; align-items: center; gap: 4px; font-size: 11px; padding: 3px 8px; border-radius: 6px; }
+</style>
+</head>
+<body>
+<div id="app">
+  <div class="header">
+    <div>
+      <div class="header-title" id="header-title">ダッシュボード</div>
+      <div class="header-sub" id="header-date"></div>
+    </div>
+    <div style="font-size:11px;color:var(--text3);font-family:'DM Mono',monospace;" id="header-net"></div>
+  </div>
+
+  <div class="scroll-area" id="scroll-area">
+    <!-- SCREEN 1: DASHBOARD -->
+    <div class="screen active" id="screen-0">
+      <div class="metric-grid">
+        <div class="metric-card full accent">
+          <div class="metric-label">総資産（JPY換算）</div>
+          <div class="metric-value" id="total-assets" style="font-size:28px;color:var(--accent);">¥0</div>
+          <div class="metric-sub" id="asset-count">資産 0件</div>
+        </div>
+        <div class="metric-card">
+          <div class="metric-label">5年後予測</div>
+          <div class="metric-value" id="forecast5" style="color:var(--green);font-size:16px;">¥0</div>
+          <div class="metric-sub">複利運用</div>
+        </div>
+        <div class="metric-card">
+          <div class="metric-label">10年後予測</div>
+          <div class="metric-value" id="forecast10" style="color:var(--green);font-size:16px;">¥0</div>
+          <div class="metric-sub">複利運用</div>
+        </div>
+        <div class="metric-card">
+          <div class="metric-label">総負債</div>
+          <div class="metric-value" id="total-debt" style="color:var(--red);font-size:16px;">¥0</div>
+          <div class="metric-sub">負債合計</div>
+        </div>
+        <div class="metric-card">
+          <div class="metric-label">純資産</div>
+          <div class="metric-value" id="net-worth-dash" style="font-size:16px;">¥0</div>
+          <div class="metric-sub">資産 − 負債</div>
+        </div>
+      </div>
+
+      <div class="section-title">カテゴリー内訳</div>
+      <div class="card card-sm" style="margin-bottom:12px;">
+        <div style="display:flex;gap:8px;margin-bottom:12px;" id="category-pills"></div>
+        <div class="bar-chart" id="category-chart"></div>
+        <div style="display:flex;gap:4px;margin-top:8px;" id="chart-labels"></div>
+      </div>
+
+      <div class="section-title">資産一覧</div>
+      <div class="card" style="padding:0 16px;" id="asset-list-dash">
+        <div class="empty"><div class="empty-icon">🏦</div><div class="empty-text">資産を追加してください</div></div>
+      </div>
+    </div>
+
+    <!-- SCREEN 2: CASHFLOW -->
+    <div class="screen" id="screen-1">
+      <div class="metric-grid">
+        <div class="metric-card">
+          <div class="metric-label">今月の収入</div>
+          <div class="metric-value" id="monthly-income" style="color:var(--green);font-size:16px;">¥0</div>
+        </div>
+        <div class="metric-card">
+          <div class="metric-label">今月の支出</div>
+          <div class="metric-value" id="monthly-expense" style="color:var(--red);font-size:16px;">¥0</div>
+        </div>
+      </div>
+      <div class="section-title">キャッシュフロー履歴</div>
+      <div class="card" style="padding:0 16px;" id="cashflow-list">
+        <div class="empty"><div class="empty-icon">💸</div><div class="empty-text">収支を記録してください</div></div>
+      </div>
+    </div>
+
+    <!-- SCREEN 3: LIFE INVESTMENT -->
+    <div class="screen" id="screen-2">
+      <div class="section-title">ライフ投資 — 自分への投資記録</div>
+      <div class="gallery-grid" id="life-gallery">
+      </div>
+      <div id="life-empty" class="empty" style="display:none;">
+        <div class="empty-icon">✨</div><div class="empty-text">体験・旅・学びを記録してください</div>
+      </div>
+    </div>
+
+    <!-- SCREEN 4: DEBT -->
+    <div class="screen" id="screen-3">
+      <div class="sub-tabs">
+        <div class="sub-tab active" onclick="switchDebtTab(0)">負債一覧</div>
+        <div class="sub-tab" onclick="switchDebtTab(1)">純資産サマリー</div>
+      </div>
+
+      <!-- Debt tab 0 -->
+      <div id="debt-tab-0">
+        <div class="metric-grid">
+          <div class="metric-card">
+            <div class="metric-label">総負債</div>
+            <div class="metric-value" id="total-debt-2" style="color:var(--red);font-size:16px;">¥0</div>
+          </div>
+          <div class="metric-card">
+            <div class="metric-label">月々の返済合計</div>
+            <div class="metric-value" id="monthly-payment" style="font-size:16px;">¥0</div>
+          </div>
+          <div class="metric-card full">
+            <div class="metric-label">年間金利負担</div>
+            <div class="metric-value" id="annual-interest" style="color:var(--amber);font-size:16px;">¥0</div>
+            <div class="metric-sub">この金額が毎年利息として消えています</div>
+          </div>
+        </div>
+        <div class="section-title">負債一覧（金利高い順）</div>
+        <div class="card" style="padding:0 16px;" id="debt-list">
+          <div class="empty"><div class="empty-icon">🔴</div><div class="empty-text">負債を登録してください</div></div>
+        </div>
+      </div>
+
+      <!-- Debt tab 1 -->
+      <div id="debt-tab-1" style="display:none;">
+        <div class="card" style="text-align:center;padding:24px 16px;">
+          <div class="metric-label">純資産</div>
+          <div class="net-amount" id="net-worth-full" style="font-size:32px;font-weight:700;font-family:'DM Mono',monospace;margin:8px 0;">¥0</div>
+          <div style="display:flex;justify-content:center;gap:24px;margin-top:12px;">
+            <div><div class="metric-label">総資産</div><div style="font-size:13px;color:var(--green);font-family:'DM Mono',monospace;" id="nw-assets">¥0</div></div>
+            <div><div class="metric-label">総負債</div><div style="font-size:13px;color:var(--red);font-family:'DM Mono',monospace;" id="nw-debts">¥0</div></div>
+          </div>
+        </div>
+        <div class="section-title">返済優先度（アバランチ法）</div>
+        <div class="card" style="padding:12px 16px;" id="debt-priority">
+          <div class="empty" style="padding:20px;"><div class="empty-text">負債を登録してください</div></div>
+        </div>
+        <div class="section-title">返済後の積立シミュレーション</div>
+        <div class="card card-sm alert-amber" id="debt-sim-card">
+          <div style="font-size:12px;line-height:1.7;color:var(--amber);">返済が完了したら、月々の返済額（<span id="sim-monthly">¥0</span>）を積立に回すと…<br>複利シミュレーターで確認できます</div>
+          <button onclick="goToSimulator()" style="margin-top:10px;background:var(--amber-bg);color:var(--amber);border:1px solid rgba(255,179,71,0.3);border-radius:8px;padding:8px 14px;font-size:12px;font-family:'Noto Sans JP',sans-serif;cursor:pointer;width:100%;">📈 シミュレーターで確認</button>
+        </div>
+      </div>
+    </div>
+
+    <!-- SCREEN 5: SIMULATOR -->
+    <div class="screen" id="screen-4">
+      <div class="sub-tabs">
+        <div class="sub-tab active" onclick="switchSimTab(0)">シミュレーション</div>
+        <div class="sub-tab" onclick="switchSimTab(1)">保存済みシナリオ</div>
+      </div>
+
+      <!-- Sim tab 0 -->
+      <div id="sim-tab-0">
+        <button onclick="loadFromAssets()" style="width:100%;background:var(--blue-bg);color:var(--accent);border:1px solid rgba(108,143,255,0.3);border-radius:10px;padding:10px;font-size:12px;font-family:'Noto Sans JP',sans-serif;cursor:pointer;margin-bottom:14px;">📥 資産マスターから読み込む</button>
+
+        <div class="card" style="padding:14px 16px;">
+          <div class="form-group">
+            <label class="form-label">元本: <span id="principal-display" style="color:var(--accent);font-family:'DM Mono',monospace;">¥1,000,000</span></label>
+            <div class="slider-wrap"><input type="range" id="principal-slider" min="100000" max="50000000" step="100000" value="1000000" oninput="updateSim()"></div>
+          </div>
+          <div class="form-group">
+            <label class="form-label">月々の積立額: <span id="monthly-display" style="color:var(--accent);font-family:'DM Mono',monospace;">¥30,000</span></label>
+            <div class="slider-wrap"><input type="range" id="monthly-slider" min="0" max="500000" step="5000" value="30000" oninput="updateSim()"></div>
+          </div>
+          <div class="form-group">
+            <label class="form-label">期待年利: <span id="rate-display" style="color:var(--accent);font-family:'DM Mono',monospace;">5.0%</span></label>
+            <div class="slider-wrap"><input type="range" id="rate-slider" min="0.1" max="30" step="0.1" value="5" oninput="updateSim()"></div>
+          </div>
+          <div class="form-group" style="margin-bottom:0;">
+            <label class="form-label">運用期間: <span id="years-display" style="color:var(--accent);font-family:'DM Mono',monospace;">10年</span></label>
+            <div class="slider-wrap"><input type="range" id="years-slider" min="1" max="40" step="1" value="10" oninput="updateSim()"></div>
+          </div>
+        </div>
+
+        <div class="metric-grid">
+          <div class="metric-card full accent">
+            <div class="metric-label">最終評価額</div>
+            <div class="metric-value" id="sim-final" style="color:var(--accent);font-size:24px;">¥0</div>
+          </div>
+          <div class="metric-card">
+            <div class="metric-label">元本合計</div>
+            <div class="metric-value" id="sim-principal" style="font-size:15px;">¥0</div>
+          </div>
+          <div class="metric-card">
+            <div class="metric-label">運用益</div>
+            <div class="metric-value" id="sim-gain" style="color:var(--green);font-size:15px;">¥0</div>
+          </div>
+        </div>
+
+        <div style="display:flex;gap:8px;margin-bottom:12px;" id="sim-badges"></div>
+
+        <div class="section-title">年別グラフ（元本 vs 運用益）</div>
+        <div class="card card-sm">
+          <div class="bar-chart" id="sim-chart" style="height:100px;"></div>
+          <div style="display:flex;gap:4px;margin-top:8px;overflow-x:auto;" id="sim-chart-labels"></div>
+          <div style="display:flex;gap:16px;margin-top:10px;">
+            <div style="display:flex;align-items:center;gap:5px;font-size:10px;color:var(--text2);"><div style="width:10px;height:10px;border-radius:2px;background:var(--bg3);"></div>元本累計</div>
+            <div style="display:flex;align-items:center;gap:5px;font-size:10px;color:var(--text2);"><div style="width:10px;height:10px;border-radius:2px;background:var(--accent);"></div>運用益</div>
+          </div>
+        </div>
+
+        <div class="section-title">年別詳細</div>
+        <div class="card" style="padding:0 16px;" id="sim-table"></div>
+
+        <div style="margin-top:14px;">
+          <div class="form-group">
+            <label class="form-label">FIREの目標月額</label>
+            <input type="number" inputmode="decimal" class="form-input" id="fire-target" value="300000" oninput="updateSim()" placeholder="300000">
+          </div>
+          <div style="display:flex;gap:8px;margin-top:14px;">
+  <input type="text" id="scenario-name-input" class="form-input" placeholder="シナリオ名（例：堅実プラン）" style="flex:1;font-size:16px;">
+  <button onclick="saveScenarioNamed()" style="background:var(--bg3);color:var(--text);border:1px solid var(--border);border-radius:10px;padding:12px 16px;font-size:13px;font-family:'Noto Sans JP',sans-serif;cursor:pointer;white-space:nowrap;">💾 保存</button>
+</div>
+        </div>
+      </div>
+
+      <!-- Sim tab 1 -->
+      <div id="sim-tab-1" style="display:none;">
+        <div id="scenario-list">
+          <div class="empty"><div class="empty-icon">📋</div><div class="empty-text">保存済みシナリオはありません</div></div>
+        </div>
+      </div>
+    </div>
+
+    <!-- SCREEN 5: TAX -->
+    <div class="screen" id="screen-5">
+
+      <!-- MODE TOGGLE -->
+      <div style="display:flex;gap:8px;margin-bottom:12px;align-items:center;">
+        <div style="font-size:11px;color:var(--text2);flex-shrink:0;">用途モード：</div>
+        <div style="display:flex;flex:1;background:var(--bg3);border-radius:10px;padding:3px;">
+          <div id="mode-personal" onclick="setTaxMode('personal')" style="flex:1;text-align:center;padding:7px;border-radius:8px;font-size:12px;cursor:pointer;background:var(--bg2);color:var(--text);font-weight:500;transition:all 0.2s;">👤 個人用</div>
+          <div id="mode-business" onclick="setTaxMode('business')" style="flex:1;text-align:center;padding:7px;border-radius:8px;font-size:12px;cursor:pointer;color:var(--text2);transition:all 0.2s;">🏢 事業用</div>
+        </div>
+      </div>
+
+      <!-- PRESETS -->
+      <div id="preset-bar-business" style="display:none;margin-bottom:10px;">
+        <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:6px;">
+          <span style="font-size:11px;color:var(--text3);">事業用プリセット</span>
+          <button onclick="togglePresetEdit()" id="preset-edit-btn" style="font-size:10px;color:var(--accent);background:none;border:none;cursor:pointer;padding:2px 6px;">✏️ 名前を編集</button>
+        </div>
+        <!-- 通常表示 -->
+        <div id="preset-display" style="display:flex;gap:6px;overflow-x:auto;padding-bottom:4px;">
+          <button onclick="applyPreset('roastery')" id="btn-roastery" style="white-space:nowrap;background:var(--amber-bg);color:var(--amber);border:1px solid rgba(255,179,71,0.3);border-radius:8px;padding:6px 12px;font-size:11px;font-family:'Noto Sans JP',sans-serif;cursor:pointer;">☕ <span id="label-roastery">ロースタリー</span></button>
+          <button onclick="applyPreset('lodging')" id="btn-lodging" style="white-space:nowrap;background:var(--blue-bg);color:var(--accent);border:1px solid rgba(108,143,255,0.3);border-radius:8px;padding:6px 12px;font-size:11px;font-family:'Noto Sans JP',sans-serif;cursor:pointer;">🏨 <span id="label-lodging">宿泊施設</span></button>
+          <button onclick="applyPreset('land')" style="white-space:nowrap;background:var(--green-bg);color:var(--green);border:1px solid rgba(61,220,132,0.3);border-radius:8px;padding:6px 12px;font-size:11px;font-family:'Noto Sans JP',sans-serif;cursor:pointer;">🌾 農地・土地</button>
+        </div>
+        <!-- 編集モード -->
+        <div id="preset-edit-panel" style="display:none;background:var(--bg3);border-radius:10px;padding:10px;margin-top:6px;">
+          <div style="font-size:11px;color:var(--text2);margin-bottom:8px;">プリセット名を変更（農地・土地は固定）</div>
+          <div style="display:flex;gap:8px;align-items:center;margin-bottom:8px;">
+            <span style="font-size:14px;">☕</span>
+            <input type="text" id="input-roastery" class="form-input" style="flex:1;padding:8px 10px;font-size:13px;" placeholder="ロースタリー" oninput="updatePresetLabel('roastery')">
+          </div>
+          <div style="display:flex;gap:8px;align-items:center;margin-bottom:10px;">
+            <span style="font-size:14px;">🏨</span>
+            <input type="text" id="input-lodging" class="form-input" style="flex:1;padding:8px 10px;font-size:13px;" placeholder="宿泊施設" oninput="updatePresetLabel('lodging')">
+          </div>
+          <button onclick="togglePresetEdit()" style="width:100%;background:var(--accent);color:#fff;border:none;border-radius:8px;padding:9px;font-size:13px;font-family:'Noto Sans JP',sans-serif;cursor:pointer;font-weight:500;">完了</button>
+        </div>
+      </div>
+
+      <div class="sub-tabs" id="tax-sub-tabs" style="overflow-x:auto;flex-wrap:nowrap;display:flex;gap:4px;-webkit-overflow-scrolling:touch;">
+        <div class="sub-tab active" onclick="switchTaxTab(0)" style="white-space:nowrap;">譲渡所得税</div>
+        <div class="sub-tab" onclick="switchTaxTab(1)" style="white-space:nowrap;">取得費・減価</div>
+        <div class="sub-tab" onclick="switchTaxTab(2)" style="white-space:nowrap;">購入諸費用</div>
+        <div class="sub-tab" onclick="switchTaxTab(3)" style="white-space:nowrap;">固定資産税</div>
+        <div class="sub-tab" onclick="switchTaxTab(4)" style="white-space:nowrap;">事業税務</div>
+      </div>
+
+      <!-- TAX TAB 0: 譲渡所得税 -->
+      <div id="tax-tab-0">
+        <div class="card" style="padding:14px 16px;margin-bottom:10px;">
+          <div style="font-size:11px;color:var(--text2);margin-bottom:12px;line-height:1.6;">売却益（譲渡所得）にかかる税金を計算します。<br>所有期間・用途・特例の適用可否を入力してください。</div>
+
+          <div class="form-group">
+            <label class="form-label">売却価格（円）</label>
+            <input type="number" inputmode="decimal" class="form-input" id="tax-sell-price" placeholder="50000000" oninput="calcTransferTax()">
+          </div>
+          <div class="form-group">
+            <label class="form-label">取得費（購入価格＋取得諸費用）</label>
+            <input type="number" inputmode="decimal" class="form-input" id="tax-cost" placeholder="35000000" oninput="calcTransferTax()">
+            <div style="font-size:10px;color:var(--text3);margin-top:4px;">※不明な場合は売却価格の5%（概算取得費）が自動適用されます</div>
+          </div>
+          <div class="form-group">
+            <label class="form-label">譲渡費用（仲介手数料・印紙代等）</label>
+            <input type="number" inputmode="decimal" class="form-input" id="tax-transfer-cost" placeholder="1500000" oninput="calcTransferTax()">
+          </div>
+          <div class="form-group">
+            <label class="form-label">所有期間</label>
+            <select class="form-input form-select" id="tax-period" onchange="calcTransferTax()">
+              <option value="long">長期譲渡（5年超）— 税率20.315%</option>
+              <option value="short">短期譲渡（5年以下）— 税率39.63%</option>
+            </select>
+          </div>
+          <div class="form-group">
+            <label class="form-label">用途</label>
+            <select class="form-input form-select" id="tax-usage" onchange="calcTransferTax()">
+              <option value="residence">居住用（マイホーム）</option>
+              <option value="business">事業用</option>
+              <option value="investment">投資用</option>
+            </select>
+          </div>
+          <div class="form-group" id="special-deduction-group">
+            <label class="form-label">居住用特例</label>
+            <select class="form-input form-select" id="tax-special" onchange="calcTransferTax()">
+              <option value="3000">3,000万円特別控除（居住用）</option>
+              <option value="0">特例なし</option>
+              <option value="light">軽減税率の特例（10年超所有）</option>
+            </select>
+          </div>
+        </div>
+
+        <!-- RESULTS -->
+        <div class="card" id="tax-result-card" style="display:none;">
+          <div class="section-title" style="margin-top:0;">計算結果</div>
+          <div class="list-row"><span class="list-sub">売却価格</span><span class="list-amount" id="tr-sell">—</span></div>
+          <div class="list-row"><span class="list-sub">取得費</span><span class="list-amount" id="tr-cost">—</span></div>
+          <div class="list-row"><span class="list-sub">譲渡費用</span><span class="list-amount" id="tr-tcost">—</span></div>
+          <div class="list-row"><span class="list-sub">特別控除</span><span class="list-amount" style="color:var(--green);" id="tr-deduction">—</span></div>
+          <div class="divider" style="margin:8px 0;"></div>
+          <div class="list-row"><span style="font-weight:600;">課税譲渡所得</span><span class="list-amount" id="tr-taxable" style="color:var(--amber);">—</span></div>
+          <div class="list-row"><span style="font-weight:600;">所得税</span><span class="list-amount" id="tr-income-tax">—</span></div>
+          <div class="list-row"><span style="font-weight:600;">住民税</span><span class="list-amount" id="tr-resident-tax">—</span></div>
+          <div class="list-row"><span style="font-weight:600;">復興特別所得税</span><span class="list-amount" id="tr-recovery-tax">—</span></div>
+          <div class="divider" style="margin:8px 0;"></div>
+          <div class="list-row">
+            <span style="font-size:15px;font-weight:700;">納税額合計</span>
+            <span class="list-amount" id="tr-total-tax" style="font-size:18px;color:var(--red);">—</span>
+          </div>
+          <div class="list-row" style="border:none;">
+            <span style="font-weight:600;">手取り額</span>
+            <span class="list-amount" id="tr-net" style="color:var(--green);">—</span>
+          </div>
+          <div id="tr-note" style="font-size:11px;color:var(--amber);margin-top:8px;padding:8px;background:var(--amber-bg);border-radius:8px;line-height:1.6;display:none;"></div>
+        </div>
+
+        <div class="card card-sm" style="background:var(--red-bg);border-color:rgba(255,95,109,0.2);">
+          <div style="font-size:11px;color:var(--red);line-height:1.7;">⚠️ <strong>ご注意：</strong>この計算は概算です。実際の申告は税理士にご相談ください。特例の適用可否・住民税の特例・ふるさと納税との兼ね合いなど、個別判断が必要です。</div>
+        </div>
+      </div>
+
+      <!-- TAX TAB 1: 取得費・減価償却 -->
+      <div id="tax-tab-1" style="display:none;">
+        <div class="card" style="padding:14px 16px;">
+          <div style="font-size:11px;color:var(--text2);margin-bottom:12px;line-height:1.6;">建物の減価償却を計算し、正確な取得費を算出します。<br>土地は減価しません（建物のみ対象）。</div>
+
+          <div class="form-group">
+            <label class="form-label">購入時の建物価格（円）</label>
+            <input type="number" inputmode="decimal" class="form-input" id="dep-building" placeholder="20000000" oninput="calcDepreciation()">
+          </div>
+          <div class="form-group">
+            <label class="form-label">購入時の土地価格（円）</label>
+            <input type="number" inputmode="decimal" class="form-input" id="dep-land" placeholder="15000000" oninput="calcDepreciation()">
+          </div>
+          <div class="form-group">
+            <label class="form-label">建物の種類</label>
+            <select class="form-input form-select" id="dep-type" onchange="calcDepreciation()">
+              <option value="22">木造（耐用年数22年）</option>
+              <option value="34">木骨モルタル（34年）</option>
+              <option value="47">鉄筋コンクリート（47年）</option>
+              <option value="38">鉄骨鉄筋コンクリート（38年）</option>
+              <option value="19">軽量鉄骨（19年）</option>
+            </select>
+          </div>
+          <div class="form-group">
+            <label class="form-label">用途</label>
+            <select class="form-input form-select" id="dep-usage" onchange="calcDepreciation()">
+              <option value="personal">非事業用（居住用・個人）</option>
+              <option value="business">事業用（賃貸・宿泊施設等）</option>
+            </select>
+          </div>
+          <div class="form-group">
+            <label class="form-label">経過年数（年）</label>
+            <input type="number" inputmode="decimal" class="form-input" id="dep-years" placeholder="10" oninput="calcDepreciation()">
+          </div>
+          <div class="form-group">
+            <label class="form-label">取得諸費用（登記費用・仲介料等）</label>
+            <input type="number" inputmode="decimal" class="form-input" id="dep-misc" placeholder="1500000" oninput="calcDepreciation()">
+          </div>
+        </div>
+
+        <div class="card" id="dep-result" style="display:none;">
+          <div class="section-title" style="margin-top:0;">減価償却・取得費計算結果</div>
+          <div class="list-row"><span class="list-sub">建物購入価格</span><span class="list-amount" id="dep-r-building">—</span></div>
+          <div class="list-row"><span class="list-sub">償却率（年）</span><span class="list-amount" id="dep-r-rate">—</span></div>
+          <div class="list-row"><span class="list-sub">経過年数</span><span class="list-amount" id="dep-r-years">—</span></div>
+          <div class="list-row"><span class="list-sub">減価償却累計額</span><span class="list-amount" style="color:var(--red);" id="dep-r-total">—</span></div>
+          <div class="list-row"><span class="list-sub">建物の現在取得費</span><span class="list-amount" id="dep-r-building-now">—</span></div>
+          <div class="divider" style="margin:8px 0;"></div>
+          <div class="list-row"><span style="font-weight:600;">取得費合計（土地＋建物＋諸費用）</span></div>
+          <div class="list-row" style="border:none;"><span style="font-size:11px;color:var(--text2);">※譲渡所得税計算の「取得費」欄に入力してください</span><span class="list-amount" id="dep-r-total-cost" style="color:var(--green);font-size:16px;">—</span></div>
+          <div style="display:flex;gap:8px;margin-top:12px;">
+            <button onclick="copyToTransfer()" style="flex:1;background:var(--blue-bg);color:var(--accent);border:1px solid rgba(108,143,255,0.3);border-radius:8px;padding:10px;font-size:12px;font-family:'Noto Sans JP',sans-serif;cursor:pointer;">→ 譲渡所得税に転記</button>
+          </div>
+        </div>
+
+        <div class="card card-sm" style="background:var(--blue-bg);border-color:rgba(108,143,255,0.2);">
+          <div style="font-size:11px;color:var(--accent);line-height:1.7;">💡 <strong>非事業用の場合：</strong>償却率は事業用の1.0 → 0.9に置き換えられ、残存価額10%まで償却されます（旧定額法）。事業用は残存価額1円まで償却可能です。</div>
+        </div>
+      </div>
+
+      <!-- TAX TAB 2: 購入諸費用 -->
+      <div id="tax-tab-2" style="display:none;">
+        <div class="card" style="padding:14px 16px;">
+          <div style="font-size:11px;color:var(--text2);margin-bottom:12px;line-height:1.6;">不動産購入時にかかる諸税・費用を自動計算します。</div>
+
+          <div class="form-group">
+            <label class="form-label">物件価格（円）</label>
+            <input type="number" inputmode="decimal" class="form-input" id="pur-price" placeholder="50000000" oninput="calcPurchaseCost()">
+          </div>
+          <div class="form-group">
+            <label class="form-label">うち土地価格（円）</label>
+            <input type="number" inputmode="decimal" class="form-input" id="pur-land" placeholder="20000000" oninput="calcPurchaseCost()">
+          </div>
+          <div class="form-group">
+            <label class="form-label">建物価格（円）</label>
+            <input type="number" inputmode="decimal" class="form-input" id="pur-building" placeholder="30000000" oninput="calcPurchaseCost()">
+          </div>
+          <div class="form-group">
+            <label class="form-label">用途</label>
+            <select class="form-input form-select" id="pur-usage" onchange="calcPurchaseCost()">
+              <option value="residence">居住用（新築・中古住宅）</option>
+              <option value="business">事業用・投資用</option>
+            </select>
+          </div>
+          <div class="form-group">
+            <label class="form-label">新築 / 中古</label>
+            <select class="form-input form-select" id="pur-new" onchange="calcPurchaseCost()">
+              <option value="new">新築</option>
+              <option value="used">中古</option>
+            </select>
+          </div>
+          <div class="form-group">
+            <label class="form-label">ローン借入額（円）</label>
+            <input type="number" inputmode="decimal" class="form-input" id="pur-loan" placeholder="40000000" oninput="calcPurchaseCost()">
+          </div>
+        </div>
+
+        <div class="card" id="pur-result" style="display:none;">
+          <div class="section-title" style="margin-top:0;">購入諸費用の内訳</div>
+          <div class="list-row"><span class="list-sub">不動産取得税（土地）</span><span class="list-amount" id="pur-r-acq-land">—</span></div>
+          <div class="list-row"><span class="list-sub">不動産取得税（建物）</span><span class="list-amount" id="pur-r-acq-building">—</span></div>
+          <div class="list-row"><span class="list-sub">登録免許税（所有権移転）</span><span class="list-amount" id="pur-r-reg">—</span></div>
+          <div class="list-row"><span class="list-sub">登録免許税（抵当権設定）</span><span class="list-amount" id="pur-r-mortgage">—</span></div>
+          <div class="list-row"><span class="list-sub">印紙税（売買契約書）</span><span class="list-amount" id="pur-r-stamp">—</span></div>
+          <div class="list-row"><span class="list-sub">仲介手数料（上限）</span><span class="list-amount" id="pur-r-agent">—</span></div>
+          <div class="divider" style="margin:8px 0;"></div>
+          <div class="list-row">
+            <span style="font-size:14px;font-weight:700;">諸費用合計（概算）</span>
+            <span class="list-amount" id="pur-r-total" style="font-size:16px;color:var(--amber);">—</span>
+          </div>
+          <div class="list-row" style="border:none;">
+            <span class="list-sub">物件価格＋諸費用</span>
+            <span class="list-amount" id="pur-r-grand" style="color:var(--accent);">—</span>
+          </div>
+        </div>
+
+        <div class="card card-sm" style="background:var(--amber-bg);border-color:rgba(255,179,71,0.2);">
+          <div style="font-size:11px;color:var(--amber);line-height:1.7;">💡 不動産取得税は軽減措置・特例が多数あります（新築住宅特例・宅地の特例など）。実際の税額は都道府県税事務所でご確認ください。</div>
+        </div>
+      </div>
+
+      <!-- TAX TAB 3: 固定資産税 -->
+      <div id="tax-tab-3" style="display:none;">
+        <div class="card" style="padding:14px 16px;">
+          <div style="font-size:11px;color:var(--text2);margin-bottom:12px;line-height:1.6;">固定資産税・都市計画税の年間税額を推計します。</div>
+
+          <div class="form-group">
+            <label class="form-label">固定資産税評価額（土地）</label>
+            <input type="number" inputmode="decimal" class="form-input" id="prop-land-val" placeholder="15000000" oninput="calcPropertyTax()">
+            <div style="font-size:10px;color:var(--text3);margin-top:4px;">※目安：実勢価格の約70%</div>
+          </div>
+          <div class="form-group">
+            <label class="form-label">固定資産税評価額（建物）</label>
+            <input type="number" inputmode="decimal" class="form-input" id="prop-building-val" placeholder="10000000" oninput="calcPropertyTax()">
+            <div style="font-size:10px;color:var(--text3);margin-top:4px;">※目安：建築費の約50〜60%</div>
+          </div>
+          <div class="form-group">
+            <label class="form-label">土地の種類</label>
+            <select class="form-input form-select" id="prop-land-type" onchange="calcPropertyTax()">
+              <option value="small">小規模住宅用地（200㎡以下）— 評価額1/6</option>
+              <option value="general">一般住宅用地（200㎡超）— 評価額1/3</option>
+              <option value="other">その他（商業用・事業用など）— 軽減なし</option>
+            </select>
+          </div>
+          <div class="form-group">
+            <label class="form-label">都市計画区域</label>
+            <select class="form-input form-select" id="prop-city-plan" onchange="calcPropertyTax()">
+              <option value="yes">都市計画区域内（都市計画税あり）</option>
+              <option value="no">都市計画区域外（都市計画税なし）</option>
+            </select>
+          </div>
+          <div class="form-group">
+            <label class="form-label">新築住宅の建物（特例）</label>
+            <select class="form-input form-select" id="prop-new-house" onchange="calcPropertyTax()">
+              <option value="no">特例なし（中古・事業用）</option>
+              <option value="yes">新築住宅特例（建物税額1/2、最大3〜7年）</option>
+            </select>
+          </div>
+        </div>
+
+        <div class="card" id="prop-result" style="display:none;">
+          <div class="section-title" style="margin-top:0;">固定資産税・都市計画税（年間）</div>
+          <div class="list-row"><span class="list-sub">土地の課税標準額</span><span class="list-amount" id="prop-r-land-base">—</span></div>
+          <div class="list-row"><span class="list-sub">建物の課税標準額</span><span class="list-amount" id="prop-r-building-base">—</span></div>
+          <div class="divider" style="margin:8px 0;"></div>
+          <div class="list-row"><span class="list-sub">固定資産税（土地）</span><span class="list-amount" id="prop-r-fix-land">—</span></div>
+          <div class="list-row"><span class="list-sub">固定資産税（建物）</span><span class="list-amount" id="prop-r-fix-building">—</span></div>
+          <div class="list-row"><span class="list-sub">都市計画税（土地）</span><span class="list-amount" id="prop-r-city-land">—</span></div>
+          <div class="list-row"><span class="list-sub">都市計画税（建物）</span><span class="list-amount" id="prop-r-city-building">—</span></div>
+          <div class="divider" style="margin:8px 0;"></div>
+          <div class="list-row">
+            <span style="font-size:14px;font-weight:700;">年間合計税額</span>
+            <span class="list-amount" id="prop-r-annual" style="font-size:16px;color:var(--amber);">—</span>
+          </div>
+          <div class="list-row" style="border:none;">
+            <span class="list-sub">月割り（参考）</span>
+            <span class="list-amount" id="prop-r-monthly" style="color:var(--text2);">—</span>
+          </div>
+        </div>
+
+        <div class="card card-sm" style="background:var(--green-bg);border-color:rgba(61,220,132,0.2);">
+          <div style="font-size:11px;color:var(--green);line-height:1.7;">💡 固定資産税の評価額は3年ごとに見直されます（評価替え）。納税通知書の「課税明細書」に評価額が記載されています。</div>
+        </div>
+      </div>
+
+      <!-- TAX TAB 4: 事業税務（ロースタリー・宿泊施設向け） -->
+      <div id="tax-tab-4" style="display:none;">
+
+        <!-- 減価償却費の経費算入 -->
+        <div class="section-title" style="margin-top:0;">事業用建物の年間減価償却費（経費算入額）</div>
+        <div class="card" style="padding:14px 16px;margin-bottom:10px;">
+          <div style="font-size:11px;color:var(--text2);margin-bottom:12px;line-height:1.6;">事業用不動産は建物の減価償却費を毎年経費計上できます。節税効果を確認しましょう。</div>
+          <div class="form-group">
+            <label class="form-label">建物取得価額（円）</label>
+            <input type="number" inputmode="decimal" class="form-input" id="biz-building" placeholder="30000000" oninput="calcBizTax()">
+          </div>
+          <div class="form-group">
+            <label class="form-label">建物の種類（耐用年数）</label>
+            <select class="form-input form-select" id="biz-dep-type" onchange="calcBizTax()">
+              <option value="22">木造（22年）</option>
+              <option value="34">木骨モルタル（34年）</option>
+              <option value="47">鉄筋コンクリート（47年）</option>
+              <option value="38">鉄骨鉄筋コンクリート（38年）</option>
+              <option value="19">軽量鉄骨（19年）</option>
+            </select>
+          </div>
+          <div class="form-group">
+            <label class="form-label">事業所得の税率（所得税＋住民税 概算）</label>
+            <select class="form-input form-select" id="biz-tax-rate" onchange="calcBizTax()">
+              <option value="0.20">20%（課税所得 195万〜330万円）</option>
+              <option value="0.30">30%（課税所得 330万〜695万円）</option>
+              <option value="0.40">40%（課税所得 695万〜900万円）</option>
+              <option value="0.50">50%（課税所得 900万〜1,800万円）</option>
+              <option value="0.55">55%（課税所得 1,800万円超）</option>
+            </select>
+          </div>
+        </div>
+
+        <div class="card" id="biz-dep-result" style="display:none;margin-bottom:10px;">
+          <div class="section-title" style="margin-top:0;">年間節税効果</div>
+          <div class="list-row"><span class="list-sub">耐用年数</span><span class="list-amount" id="biz-r-life">—</span></div>
+          <div class="list-row"><span class="list-sub">年間減価償却費（経費）</span><span class="list-amount" id="biz-r-dep" style="color:var(--amber);">—</span></div>
+          <div class="list-row"><span class="list-sub">年間節税額（概算）</span><span class="list-amount" id="biz-r-saving" style="color:var(--green);">—</span></div>
+          <div class="list-row" style="border:none;"><span class="list-sub">耐用年数内の節税総額</span><span class="list-amount" id="biz-r-total-saving" style="color:var(--green);">—</span></div>
+        </div>
+
+        <!-- 消費税還付の目安 -->
+        <div class="section-title">消費税還付の目安（課税事業者向け）</div>
+        <div class="card" style="padding:14px 16px;margin-bottom:10px;">
+          <div style="font-size:11px;color:var(--text2);margin-bottom:12px;line-height:1.6;">課税事業者が事業用不動産を購入した場合、建物部分の消費税を還付申請できる可能性があります。</div>
+          <div class="form-group">
+            <label class="form-label">建物購入価格（税抜）</label>
+            <input type="number" inputmode="decimal" class="form-input" id="biz-building-excl" placeholder="30000000" oninput="calcConsumptionTaxRefund()">
+          </div>
+          <div class="form-group">
+            <label class="form-label">課税売上割合の見込み</label>
+            <select class="form-input form-select" id="biz-taxable-ratio" onchange="calcConsumptionTaxRefund()">
+              <option value="1.0">95%以上（ほぼ全て課税売上）</option>
+              <option value="0.8">80%程度</option>
+              <option value="0.6">60%程度（住居兼事業など）</option>
+              <option value="0.5">50%程度</option>
+            </select>
+          </div>
+        </div>
+
+        <div class="card" id="biz-ct-result" style="display:none;margin-bottom:10px;">
+          <div class="section-title" style="margin-top:0;">消費税還付の概算</div>
+          <div class="list-row"><span class="list-sub">建物の消費税（10%）</span><span class="list-amount" id="biz-r-ct-base">—</span></div>
+          <div class="list-row"><span class="list-sub">課税売上割合</span><span class="list-amount" id="biz-r-ct-ratio">—</span></div>
+          <div class="list-row" style="border:none;"><span style="font-weight:600;">還付見込み額</span><span class="list-amount" id="biz-r-ct-refund" style="color:var(--green);font-size:16px;">—</span></div>
+          <div style="font-size:11px;color:var(--amber);margin-top:8px;padding:8px;background:var(--amber-bg);border-radius:8px;line-height:1.6;">⚠️ 消費税還付には調整計算（3年間の課税売上割合変動）が伴います。実際の申請は税理士に依頼してください。</div>
+        </div>
+
+        <!-- 住宅ローン控除（個人用モード時） -->
+        <div id="biz-loan-deduction-section">
+          <div class="section-title">住宅ローン控除の試算（個人用）</div>
+          <div class="card" style="padding:14px 16px;margin-bottom:10px;">
+            <div style="font-size:11px;color:var(--text2);margin-bottom:12px;line-height:1.6;">居住用住宅を住宅ローンで購入した場合、年末残高の0.7%を最大13年間、所得税・住民税から控除できます。</div>
+            <div class="form-group">
+              <label class="form-label">ローン残高（年末時点）</label>
+              <input type="number" inputmode="decimal" class="form-input" id="loan-balance-ctrl" placeholder="35000000" oninput="calcLoanDeduction()">
+            </div>
+            <div class="form-group">
+              <label class="form-label">住宅の種類</label>
+              <select class="form-input form-select" id="loan-house-type" onchange="calcLoanDeduction()">
+                <option value="new-zeh">新築ZEH水準省エネ（上限4,500万円）</option>
+                <option value="new-standard">新築省エネ基準適合（上限4,000万円）</option>
+                <option value="new-other">新築その他（上限3,000万円）</option>
+                <option value="used-zeh">中古認定住宅・省エネ（上限3,000万円）</option>
+                <option value="used-other">中古その他（上限2,000万円）</option>
+              </select>
+            </div>
+            <div class="form-group">
+              <label class="form-label">年収（目安）</label>
+              <select class="form-input form-select" id="loan-income" onchange="calcLoanDeduction()">
+                <option value="3000000">300万円台</option>
+                <option value="5000000">500万円台</option>
+                <option value="7000000">700万円台</option>
+                <option value="10000000">1,000万円超</option>
+              </select>
+            </div>
+          </div>
+
+          <div class="card" id="loan-result" style="display:none;margin-bottom:10px;">
+            <div class="section-title" style="margin-top:0;">住宅ローン控除の試算</div>
+            <div class="list-row"><span class="list-sub">控除対象ローン残高</span><span class="list-amount" id="loan-r-base">—</span></div>
+            <div class="list-row"><span class="list-sub">年間控除額（0.7%）</span><span class="list-amount" id="loan-r-annual" style="color:var(--green);">—</span></div>
+            <div class="list-row"><span class="list-sub">最大控除期間</span><span class="list-amount" id="loan-r-period">13年</span></div>
+            <div class="list-row" style="border:none;"><span style="font-weight:600;">13年間の最大控除総額</span><span class="list-amount" id="loan-r-total" style="color:var(--green);font-size:16px;">—</span></div>
+            <div style="font-size:11px;color:var(--text2);margin-top:8px;line-height:1.6;">※所得税の納税額を上回る部分は住民税から控除（上限9.75万円/年）。年収が低い場合は控除しきれないことがあります。</div>
+          </div>
+        </div>
+
+        <div class="card card-sm" style="background:var(--red-bg);border-color:rgba(255,95,109,0.2);">
+          <div style="font-size:11px;color:var(--red);line-height:1.7;">⚠️ 全ての計算は概算です。消費税還付・減価償却・住宅ローン控除は適用条件が複雑です。確定申告前に必ず税理士にご確認ください。</div>
+        </div>
+      </div>
+
+    </div>
+
+    <!-- SCREEN 6: SETTINGS -->
+    <div class="screen" id="screen-6">
+      <div class="section-title">通貨レート設定</div>
+      <div class="card">
+        <div class="form-group">
+          <label class="form-label">ETH → JPY レート (1 ETHあたり)</label>
+          <input type="number" inputmode="decimal" class="form-input" id="eth-rate" placeholder="500000" oninput="saveRates()">
+        </div>
+        <div class="form-group" style="margin-bottom:0;">
+          <label class="form-label">USD → JPY レート (1 USDあたり)</label>
+          <input type="number" inputmode="decimal" class="form-input" id="usd-rate" placeholder="155" oninput="saveRates()">
+        </div>
+      </div>
+
+      <div class="section-title">データ管理</div>
+      <div class="card">
+        <button onclick="exportData()" class="form-btn" style="margin-bottom:10px;background:var(--bg3);color:var(--text);border:1px solid var(--border);">📤 データをエクスポート（JSON）</button>
+        <button onclick="document.getElementById('import-file').click()" class="form-btn" style="margin-bottom:10px;background:var(--bg3);color:var(--text);border:1px solid var(--border);">📥 データをインポート</button>
+        <input type="file" id="import-file" accept=".json" style="display:none;" onchange="importData(event)">
+        <button onclick="confirmClear()" class="form-btn form-btn-danger">🗑️ 全データを削除</button>
+      </div>
+
+      <div class="section-title">アプリ情報</div>
+      <div class="card">
+        <div class="list-row">
+          <span class="list-sub">バージョン</span>
+          <span style="font-size:12px;font-family:'DM Mono',monospace;color:var(--text2);">1.0.0</span>
+        </div>
+        <div class="list-row">
+          <span class="list-sub">データ保存</span>
+          <span style="font-size:12px;color:var(--text2);">ローカル（端末内）</span>
+        </div>
+        <div class="list-row" style="border:none;">
+          <span class="list-sub">作成</span>
+          <span style="font-size:12px;color:var(--text2);">Claude × Anthropic</span>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- BOTTOM TAB BAR -->
+  <div class="tab-bar">
+    <div class="tab-item active" onclick="switchTab(0)"><div class="tab-icon">🏠</div><div class="tab-label">ホーム</div></div>
+    <div class="tab-item" onclick="switchTab(1)"><div class="tab-icon">💸</div><div class="tab-label">収支</div></div>
+    <div class="tab-item" onclick="switchTab(2)"><div class="tab-icon">✨</div><div class="tab-label">投資</div></div>
+    <div class="tab-item" onclick="switchTab(3)"><div class="tab-icon">🔴</div><div class="tab-label">負債</div></div>
+    <div class="tab-item" onclick="switchTab(4)"><div class="tab-icon">📈</div><div class="tab-label">複利</div></div>
+    <div class="tab-item" onclick="switchTab(5)"><div class="tab-icon">🏛️</div><div class="tab-label">税務</div></div>
+    <div class="tab-item" onclick="switchTab(6)"><div class="tab-icon">⚙️</div><div class="tab-label">設定</div></div>
+  </div>
+
+  <!-- FAB -->
+  <button class="fab" id="fab-btn" onclick="openAddModal()">＋</button>
+</div>
+
+<!-- MODALS -->
+<!-- Asset Modal -->
+<div class="overlay" id="modal-asset" onclick="closeModal('modal-asset')">
+  <div class="sheet" onclick="event.stopPropagation()">
+    <div class="sheet-handle"></div>
+    <div class="sheet-title">資産を追加</div>
+    <div class="form-group"><label class="form-label">資産名</label><input type="text" class="form-input" id="asset-name" placeholder="財形貯蓄、ETHウォレット…"></div>
+    <div class="form-group">
+      <label class="form-label">カテゴリー</label>
+      <select class="form-input form-select" id="asset-category">
+        <option value="守り">守り（低リスク）</option>
+        <option value="攻め">攻め（高リスク）</option>
+        <option value="事業">事業</option>
+      </select>
+    </div>
+    <div class="form-group"><label class="form-label">残高</label><input type="number" inputmode="decimal" class="form-input" id="asset-balance" placeholder="1000000"></div>
+    <div class="form-group">
+      <label class="form-label">通貨</label>
+      <select class="form-input form-select" id="asset-currency">
+        <option value="JPY">JPY（日本円）</option>
+        <option value="ETH">ETH（イーサリアム）</option>
+        <option value="USD">USD（米ドル）</option>
+      </select>
+    </div>
+    <div class="form-group"><label class="form-label">期待年利（%）</label><input type="number" inputmode="decimal" class="form-input" id="asset-rate" placeholder="3.5" step="0.1"></div>
+    <div class="form-group"><label class="form-label">メモ</label><input type="text" class="form-input" id="asset-memo" placeholder="金融機関名など"></div>
+    <button class="form-btn" onclick="saveAsset()">追加する</button>
+  </div>
+</div>
+
+<!-- Cashflow Modal -->
+<div class="overlay" id="modal-cashflow" onclick="closeModal('modal-cashflow')">
+  <div class="sheet" onclick="event.stopPropagation()">
+    <div class="sheet-handle"></div>
+    <div class="sheet-title">収支を記録</div>
+    <div class="template-grid">
+      <button class="template-btn income" onclick="setTemplate('income')">📈 事業売上</button>
+      <button class="template-btn expense" onclick="setTemplate('expense')">🛒 個人支出</button>
+      <button class="template-btn invest" onclick="setTemplate('invest')">💰 投資購入</button>
+    </div>
+    <div class="form-group"><label class="form-label">内容</label><input type="text" class="form-input" id="cf-title" placeholder="コーヒー豆 売上"></div>
+    <div class="form-group">
+      <label class="form-label">収支種別</label>
+      <select class="form-input form-select" id="cf-type">
+        <option value="収入">収入</option>
+        <option value="支出">支出</option>
+        <option value="振替">振替</option>
+      </select>
+    </div>
+    <div class="form-group">
+      <label class="form-label">区分</label>
+      <select class="form-input form-select" id="cf-segment">
+        <option value="事業">事業</option>
+        <option value="個人">個人</option>
+        <option value="投資">投資</option>
+      </select>
+    </div>
+    <div class="form-group"><label class="form-label">金額（円）</label><input type="number" inputmode="decimal" class="form-input" id="cf-amount" placeholder="85000"></div>
+    <div class="form-group"><label class="form-label">日付</label><input type="date" class="form-input" id="cf-date"></div>
+    <button class="form-btn" onclick="saveCashflow()">記録する</button>
+  </div>
+</div>
+
+<!-- Life Modal -->
+<div class="overlay" id="modal-life" onclick="closeModal('modal-life')">
+  <div class="sheet" onclick="event.stopPropagation()">
+    <div class="sheet-handle"></div>
+    <div class="sheet-title">ライフ投資を記録</div>
+    <div class="form-group"><label class="form-label">項目名</label><input type="text" class="form-input" id="life-title" placeholder="コペンハーゲン視察旅行"></div>
+    <div class="form-group">
+      <label class="form-label">カテゴリー</label>
+      <select class="form-input form-select" id="life-category">
+        <option value="旅">旅</option>
+        <option value="道具">道具</option>
+        <option value="学び">学び</option>
+        <option value="体験">体験</option>
+      </select>
+    </div>
+    <div class="form-group"><label class="form-label">金額（円）</label><input type="number" inputmode="decimal" class="form-input" id="life-amount" placeholder="300000"></div>
+    <div class="form-group">
+      <label class="form-label">満足度</label>
+      <div class="stars" id="stars">
+        <span class="star" onclick="setStar(1)">⭐</span>
+        <span class="star" onclick="setStar(2)">⭐</span>
+        <span class="star" onclick="setStar(3)">⭐</span>
+        <span class="star" onclick="setStar(4)">⭐</span>
+        <span class="star" onclick="setStar(5)">⭐</span>
+      </div>
+    </div>
+    <div class="form-group"><label class="form-label">得られた知見・メモ</label><input type="text" class="form-input" id="life-insight" placeholder="スペシャルティコーヒーの新トレンドを学んだ"></div>
+    <div class="form-group"><label class="form-label">日付</label><input type="date" class="form-input" id="life-date"></div>
+    <button class="form-btn" onclick="saveLife()">記録する</button>
+  </div>
+</div>
+
+<!-- Debt Modal -->
+<div class="overlay" id="modal-debt" onclick="closeModal('modal-debt')">
+  <div class="sheet" onclick="event.stopPropagation()">
+    <div class="sheet-handle"></div>
+    <div class="sheet-title">負債を登録</div>
+    <div class="form-group"><label class="form-label">負債名</label><input type="text" class="form-input" id="debt-name" placeholder="事業融資ローン"></div>
+    <div class="form-group">
+      <label class="form-label">カテゴリー</label>
+      <select class="form-input form-select" id="debt-category">
+        <option value="事業">事業</option>
+        <option value="設備">設備</option>
+        <option value="住宅">住宅</option>
+        <option value="個人">個人</option>
+        <option value="その他">その他</option>
+      </select>
+    </div>
+    <div class="form-group"><label class="form-label">残高（円）</label><input type="number" inputmode="decimal" class="form-input" id="debt-balance" placeholder="12000000"></div>
+    <div class="form-group"><label class="form-label">当初借入額（円）</label><input type="number" inputmode="decimal" class="form-input" id="debt-original" placeholder="15000000"></div>
+    <div class="form-group"><label class="form-label">金利（年利 %）</label><input type="number" inputmode="decimal" class="form-input" id="debt-rate" placeholder="2.3" step="0.1"></div>
+    <div class="form-group"><label class="form-label">月々の返済額（円）</label><input type="number" inputmode="decimal" class="form-input" id="debt-monthly" placeholder="98000"></div>
+    <div class="form-group"><label class="form-label">残返済回数</label><input type="number" inputmode="decimal" class="form-input" id="debt-remaining" placeholder="120"></div>
+    <div class="form-group"><label class="form-label">メモ</label><input type="text" class="form-input" id="debt-memo" placeholder="〇〇銀行 2020年開始"></div>
+    <button class="form-btn form-btn-danger" onclick="saveDebt()">登録する</button>
+  </div>
+</div>
+
+<script>
+// ============================================================
+// DATA STORE
+// ============================================================
+let state = {
+  assets: [],
+  cashflows: [],
+  lifeInvestments: [],
+  debts: [],
+  scenarios: [],
+  rates: { ETH: 500000, USD: 155 },
+  currentTab: 0,
+  currentStar: 0,
+  debtSubTab: 0,
+  simSubTab: 0
+};
+
+function loadState() {
+  try {
+    const saved = localStorage.getItem('asset-mgr-v1');
+    if (saved) Object.assign(state, JSON.parse(saved));
+  } catch(e) {}
+}
+
+function saveState() {
+  localStorage.setItem('asset-mgr-v1', JSON.stringify(state));
+}
+
+// ============================================================
+// UTILS
+// ============================================================
+function fmt(n) {
+  if (Math.abs(n) >= 1e8) return '¥' + (n/1e8).toFixed(1) + '億';
+  if (Math.abs(n) >= 1e4) return '¥' + Math.round(n).toLocaleString('ja-JP');
+  return '¥' + Math.round(n).toLocaleString('ja-JP');
+}
+function fmtFull(n) { return '¥' + Math.round(n).toLocaleString('ja-JP'); }
+function uid() { return Date.now().toString(36) + Math.random().toString(36).slice(2); }
+
+function jpyValue(asset) {
+  if (asset.currency === 'ETH') return asset.balance * state.rates.ETH;
+  if (asset.currency === 'USD') return asset.balance * state.rates.USD;
+  return asset.balance;
+}
+
+function compound(principal, monthly, rate, years) {
+  const r = rate / 100;
+  if (r === 0) return principal + monthly * 12 * years;
+  return principal * Math.pow(1 + r, years)
+    + monthly * ((Math.pow(1 + r/12, years*12) - 1) / (r/12));
+}
+
+function today() { return new Date().toISOString().slice(0,10); }
+
+function catColor(cat) {
+  if (cat === '守り') return 'var(--green)';
+  if (cat === '攻め') return 'var(--amber)';
+  if (cat === '事業') return 'var(--red)';
+  if (cat === '住宅') return 'var(--blue)';
+  return 'var(--text2)';
+}
+function catPillClass(cat) {
+  if (cat === '守り' || cat === '学び') return 'pill-green';
+  if (cat === '攻め' || cat === '設備' || cat === '道具' || cat === '旅') return 'pill-amber';
+  if (cat === '事業' || cat === '個人') return 'pill-red';
+  if (cat === '住宅' || cat === '体験') return 'pill-blue';
+  return 'pill-gray';
+}
+
+// ============================================================
+// NAVIGATION
+// ============================================================
+const tabTitles = ['ダッシュボード','キャッシュフロー','ライフ投資','負債管理','複利シミュレーター','不動産税務','設定'];
+const fabHidden = [false, false, false, false, true, true, true];
+
+function switchTab(i) {
+  document.querySelectorAll('.screen').forEach((s,j) => s.classList.toggle('active', j===i));
+  document.querySelectorAll('.tab-item').forEach((t,j) => t.classList.toggle('active', j===i));
+  document.getElementById('header-title').textContent = tabTitles[i];
+  document.getElementById('fab-btn').style.display = fabHidden[i] ? 'none' : 'flex';
+  state.currentTab = i;
+  document.getElementById('scroll-area').scrollTop = 0;
+  if (i !== 5) renderAll(); // skip re-render on tax tab (user is mid-input)
+  else renderHeader();
+}
+
+function openAddModal() {
+  const t = state.currentTab;
+  if (t === 0) openModal('modal-asset');
+  else if (t === 1) openModal('modal-cashflow');
+  else if (t === 2) openModal('modal-life');
+  else if (t === 3) openModal('modal-debt');
+}
+
+function openModal(id) {
+  document.getElementById(id).classList.add('open');
+  if (id === 'modal-cashflow') document.getElementById('cf-date').value = today();
+  if (id === 'modal-life') document.getElementById('life-date').value = today();
+}
+function closeModal(id) {
+  document.getElementById(id).classList.remove('open');
+  const storeMap = { 'modal-asset':'assets','modal-cashflow':'cashflows','modal-life':'lifeInvestments','modal-debt':'debts' };
+  const titleMap = { 'modal-asset':'資産を追加','modal-cashflow':'収支を記録','modal-life':'ライフ投資を記録','modal-debt':'負債を登録' };
+  const btnMap = { 'modal-asset':'追加する','modal-cashflow':'記録する','modal-life':'記録する','modal-debt':'登録する' };
+  if (storeMap[id]) resetModal(id, storeMap[id], titleMap[id], btnMap[id]);
+}
+
+// ============================================================
+// RENDER ALL
+// ============================================================
+function renderAll() {
+  renderDashboard();
+  renderCashflow();
+  renderLife();
+  renderDebt();
+  updateSim();
+  renderHeader();
+}
+
+function renderHeader() {
+  const now = new Date();
+  document.getElementById('header-date').textContent = now.getFullYear() + '年' + (now.getMonth()+1) + '月' + now.getDate() + '日';
+  const totalAssets = state.assets.reduce((s,a) => s + jpyValue(a), 0);
+  const totalDebts = state.debts.reduce((s,d) => s + d.balance, 0);
+  const net = totalAssets - totalDebts;
+  document.getElementById('header-net').textContent = '純資産 ' + fmt(net);
+}
+
+// ============================================================
+// DASHBOARD
+// ============================================================
+function renderDashboard() {
+  const assets = state.assets;
+  const totalJPY = assets.reduce((s,a) => s + jpyValue(a), 0);
+  const totalDebts = state.debts.reduce((s,d) => s + d.balance, 0);
+  const net = totalJPY - totalDebts;
+
+  // Weighted avg rate
+  let wavg = 0;
+  if (totalJPY > 0) {
+    wavg = assets.reduce((s,a) => s + jpyValue(a) * (a.expectedRate||0), 0) / totalJPY;
+  }
+  const f5 = compound(totalJPY, 0, wavg, 5);
+  const f10 = compound(totalJPY, 0, wavg, 10);
+
+  document.getElementById('total-assets').textContent = fmt(totalJPY);
+  document.getElementById('forecast5').textContent = fmt(f5);
+  document.getElementById('forecast10').textContent = fmt(f10);
+  document.getElementById('total-debt').textContent = fmt(totalDebts);
+  const nwEl = document.getElementById('net-worth-dash');
+  nwEl.textContent = fmt(net);
+  nwEl.style.color = net >= 0 ? 'var(--green)' : 'var(--red)';
+  document.getElementById('asset-count').textContent = '資産 ' + assets.length + '件 / 加重平均年利 ' + wavg.toFixed(1) + '%';
+
+  // Category breakdown
+  const cats = ['守り','攻め','事業'];
+  const catTotals = cats.map(c => assets.filter(a=>a.category===c).reduce((s,a)=>s+jpyValue(a),0));
+  const maxCat = Math.max(...catTotals, 1);
+
+  const pillsEl = document.getElementById('category-pills');
+  pillsEl.innerHTML = cats.map((c,i) => `<span class="pill ${catPillClass(c)}">${c} ${fmt(catTotals[i])}</span>`).join('');
+
+  const chartEl = document.getElementById('category-chart');
+  chartEl.innerHTML = cats.map((c,i) => `
+    <div class="bar-col">
+      <div class="bar-seg" style="height:${Math.max(4,(catTotals[i]/maxCat)*68)}px;background:${catColor(c)};opacity:0.85;border-radius:4px 4px 0 0;"></div>
+    </div>`).join('');
+  document.getElementById('chart-labels').innerHTML = cats.map(c=>`<div style="flex:1;text-align:center;font-size:9px;color:var(--text3);">${c}</div>`).join('');
+
+  // Asset list
+  const listEl = document.getElementById('asset-list-dash');
+  if (assets.length === 0) {
+    listEl.innerHTML = '<div class="empty"><div class="empty-icon">🏦</div><div class="empty-text">＋ボタンから資産を追加してください</div></div>';
+    return;
+  }
+  listEl.innerHTML = [...assets].sort((a,b)=>jpyValue(b)-jpyValue(a)).map(a => {
+    const jpy = jpyValue(a);
+    const f10 = compound(jpy, 0, a.expectedRate||0, 10);
+    return `<div class="swipe-wrap" id="sw-${a.id}">
+      <div class="swipe-content" data-id="${a.id}" data-store="assets" data-edit="editAsset">
+        <div class="list-row-left">
+          <div class="list-name">${a.name}</div>
+          <div style="display:flex;gap:6px;align-items:center;margin-top:3px;">
+            <span class="pill ${catPillClass(a.category)}">${a.category}</span>
+            <span style="font-size:10px;color:var(--text3);">${a.currency} / 年利${a.expectedRate||0}%</span>
+          </div>
+        </div>
+        <div class="list-row-right">
+          <div class="list-amount">${fmt(jpy)}</div>
+          <div class="list-amount-sub">10年後 ${fmt(f10)}</div>
+        </div>
+        <div class="row-actions">
+          <button class="swipe-edit" onclick="editAsset('${a.id}')">✏️</button>
+          <button class="swipe-delete" onclick="deleteItem('assets','${a.id}')">🗑</button>
+        </div>
+      </div>
+    </div>`;
+  }).join('');
+}
+
+// ============================================================
+// CASHFLOW
+// ============================================================
+function renderCashflow() {
+  const now = new Date();
+  const thisMonth = now.getFullYear() + '-' + String(now.getMonth()+1).padStart(2,'0');
+  const monthly = state.cashflows.filter(c => c.date && c.date.startsWith(thisMonth));
+  const income = monthly.filter(c=>c.type==='収入').reduce((s,c)=>s+c.amount,0);
+  const expense = monthly.filter(c=>c.type==='支出').reduce((s,c)=>s+c.amount,0);
+  document.getElementById('monthly-income').textContent = fmtFull(income);
+  document.getElementById('monthly-expense').textContent = fmtFull(expense);
+
+  const listEl = document.getElementById('cashflow-list');
+  if (state.cashflows.length === 0) {
+    listEl.innerHTML = '<div class="empty"><div class="empty-icon">💸</div><div class="empty-text">＋ボタンから収支を記録してください</div></div>';
+    return;
+  }
+  const sorted = [...state.cashflows].sort((a,b)=>b.date?.localeCompare(a.date||'')||0);
+  listEl.innerHTML = sorted.map(c => {
+    const isIncome = c.type === '収入';
+    const color = isIncome ? 'var(--green)' : c.type === '支出' ? 'var(--red)' : 'var(--text2)';
+    const sign = isIncome ? '+' : c.type === '支出' ? '-' : '';
+    return `<div class="swipe-wrap" id="sw-${c.id}">
+      <div class="swipe-content" data-id="${c.id}">
+        <div class="list-row-left">
+          <div class="list-name">${c.title}</div>
+          <div style="display:flex;gap:6px;align-items:center;margin-top:3px;">
+            <span class="pill ${catPillClass(c.segment)}">${c.segment}</span>
+            <span style="font-size:10px;color:var(--text3);">${c.date||''}</span>
+          </div>
+        </div>
+        <div class="list-row-right">
+          <div class="list-amount" style="color:${color};">${sign}${fmtFull(c.amount)}</div>
+          <div class="list-amount-sub">${c.type}</div>
+        </div>
+        <div class="row-actions">
+          <button class="swipe-edit" onclick="editCashflow('${c.id}')">✏️</button>
+          <button class="swipe-delete" onclick="deleteItem('cashflows','${c.id}')">🗑</button>
+        </div>
+      </div>
+    </div>`;
+  }).join('');
+}
+
+// ============================================================
+// LIFE INVESTMENT
+// ============================================================
+function renderLife() {
+  const items = [...state.lifeInvestments].sort((a,b)=>b.satisfaction-a.satisfaction);
+  const gallery = document.getElementById('life-gallery');
+  const empty = document.getElementById('life-empty');
+  if (items.length === 0) {
+    gallery.innerHTML = '';
+    empty.style.display = 'block';
+    return;
+  }
+  empty.style.display = 'none';
+  gallery.innerHTML = items.map(item => {
+    const roi = item.amount > 0 ? Math.round(item.satisfaction / (item.amount/10000) * 10) / 10 : 0;
+    const stars = '⭐'.repeat(item.satisfaction) + '☆'.repeat(5-item.satisfaction);
+    return `<div class="gallery-card">
+      <span class="pill ${catPillClass(item.category)}" style="margin-bottom:6px;display:inline-block;">${item.category}</span>
+      <div class="gallery-title">${item.name||item.title}</div>
+      <div style="font-size:12px;">${stars}</div>
+      <div style="margin-top:5px;display:flex;justify-content:space-between;align-items:center;">
+        <span class="pill pill-amber">ROI ${roi}</span>
+        <div style="display:flex;gap:4px;">
+          <button class="edit-btn" style="font-size:13px;" onclick="editLife('${item.id}')">✏️</button>
+          <button class="delete-btn" style="font-size:14px;" onclick="deleteItem('lifeInvestments','${item.id}')">×</button>
+        </div>
+      </div>
+      <div class="gallery-amount">${fmtFull(item.amount)}</div>
+      ${item.insight ? `<div class="gallery-insight">${item.insight}</div>` : ''}
+    </div>`;
+  }).join('');
+}
+
+// ============================================================
+// DEBT
+// ============================================================
+function renderDebt() {
+  const debts = [...state.debts].sort((a,b)=>b.interestRate-a.interestRate);
+  const totalBalance = debts.reduce((s,d)=>s+d.balance,0);
+  const totalMonthly = debts.reduce((s,d)=>s+(d.monthlyPayment||0),0);
+  const totalInterest = debts.reduce((s,d)=>s+d.balance*(d.interestRate||0)/100,0);
+
+  document.getElementById('total-debt-2').textContent = fmtFull(totalBalance);
+  document.getElementById('monthly-payment').textContent = fmtFull(totalMonthly);
+  document.getElementById('annual-interest').textContent = fmtFull(totalInterest);
+  document.getElementById('sim-monthly').textContent = fmtFull(totalMonthly);
+
+  const listEl = document.getElementById('debt-list');
+  if (debts.length === 0) {
+    listEl.innerHTML = '<div class="empty"><div class="empty-icon">🔴</div><div class="empty-text">＋ボタンから負債を登録してください</div></div>';
+  } else {
+    listEl.innerHTML = debts.map(d => {
+      const progress = d.originalAmount > 0 ? ((d.originalAmount - d.balance) / d.originalAmount * 100) : 0;
+      const progColor = progress > 80 ? 'var(--green)' : progress > 40 ? 'var(--amber)' : 'var(--red)';
+      const highInterest = d.interestRate >= 5;
+      return `<div class="swipe-wrap" id="sw-${d.id}">
+        <div class="swipe-content" data-id="${d.id}">
+          <div class="list-row-left" style="flex:1;">
+            <div style="display:flex;align-items:center;gap:6px;">
+              <div class="list-name">${d.name}</div>
+              ${highInterest ? '<span style="font-size:11px;">⚠️</span>' : ''}
+            </div>
+            <div style="display:flex;gap:6px;align-items:center;margin-top:3px;flex-wrap:wrap;">
+              <span class="pill ${catPillClass(d.category)}">${d.category}</span>
+              <span style="font-size:10px;color:var(--text3);">年利${d.interestRate||0}% / 残${d.remainingPayments||0}回</span>
+            </div>
+            <div class="progress-wrap">
+              <div class="progress-track"><div class="progress-fill" style="width:${Math.min(progress,100)}%;background:${progColor};"></div></div>
+              <div style="font-size:9px;color:var(--text3);margin-top:2px;">返済進捗 ${Math.round(progress)}%</div>
+            </div>
+          </div>
+          <div class="list-row-right">
+            <div class="list-amount" style="color:var(--red);">${fmtFull(d.balance)}</div>
+            <div class="list-amount-sub">月${fmtFull(d.monthlyPayment||0)}</div>
+          </div>
+        </div>
+        <div class="row-actions">
+          <button class="swipe-edit" onclick="editDebt('${d.id}')">✏️</button>
+          <button class="swipe-delete" onclick="deleteItem('debts','${d.id}')">🗑</button>
+        </div>
+      </div>`;
+    }).join('');
+  }
+
+  // Net worth tab
+  const totalAssets = state.assets.reduce((s,a)=>s+jpyValue(a),0);
+  const net = totalAssets - totalBalance;
+  const nwEl = document.getElementById('net-worth-full');
+  nwEl.textContent = fmtFull(net);
+  nwEl.style.color = net >= 0 ? 'var(--green)' : 'var(--red)';
+  document.getElementById('nw-assets').textContent = fmtFull(totalAssets);
+  document.getElementById('nw-debts').textContent = fmtFull(totalBalance);
+  document.getElementById('total-debt').textContent = fmtFull(totalBalance);
+  document.getElementById('net-worth-dash').textContent = fmt(net);
+  document.getElementById('net-worth-dash').style.color = net >= 0 ? 'var(--green)' : 'var(--red)';
+
+  // Priority
+  const pEl = document.getElementById('debt-priority');
+  if (debts.length === 0) {
+    pEl.innerHTML = '<div class="empty" style="padding:20px;"><div class="empty-text">負債を登録してください</div></div>';
+  } else {
+    pEl.innerHTML = debts.map((d,i) => `
+      <div class="list-row">
+        <div class="list-row-left">
+          <div style="display:flex;align-items:center;gap:8px;">
+            <span style="font-size:12px;font-weight:700;color:var(--text2);">${i+1}位</span>
+            <div>
+              <div class="list-name">${d.name}</div>
+              <div style="font-size:10px;color:var(--text3);">年利 ${d.interestRate||0}% / 年間利息 ${fmtFull(d.balance*(d.interestRate||0)/100)}</div>
+            </div>
+          </div>
+        </div>
+        ${i===0 ? '<span class="pill pill-red">最優先</span>' : ''}
+      </div>`).join('');
+    if (debts.length > 0) {
+      pEl.innerHTML += `<div style="padding:10px 0;font-size:11px;color:var(--text2);">先に高金利の借金を返すことで、年間<strong style="color:var(--green);">${fmtFull(Math.round(totalInterest))}</strong>の利息節約が見込めます。</div>`;
+    }
+  }
+}
+
+function switchDebtTab(i) {
+  document.querySelectorAll('#screen-3 .sub-tab').forEach((t,j)=>t.classList.toggle('active',j===i));
+  document.getElementById('debt-tab-0').style.display = i===0?'block':'none';
+  document.getElementById('debt-tab-1').style.display = i===1?'block':'none';
+  state.debtSubTab = i;
+}
+
+// ============================================================
+// SIMULATOR
+// ============================================================
+function updateSim() {
+  const principal = +document.getElementById('principal-slider').value;
+  const monthly = +document.getElementById('monthly-slider').value;
+  const rate = +document.getElementById('rate-slider').value;
+  const years = +document.getElementById('years-slider').value;
+  const fireTarget = +(document.getElementById('fire-target').value)||300000;
+
+  document.getElementById('principal-display').textContent = fmtFull(principal);
+  document.getElementById('monthly-display').textContent = fmtFull(monthly);
+  document.getElementById('rate-display').textContent = rate.toFixed(1) + '%';
+  document.getElementById('years-display').textContent = years + '年';
+
+  // Build yearly data
+  const data = [];
+  for (let t = 1; t <= years; t++) {
+    const fv = compound(principal, monthly, rate, t);
+    const prin = principal + monthly * 12 * t;
+    const gain = fv - prin;
+    data.push({ t, fv, prin, gain });
+  }
+
+  const final = data[data.length-1];
+  if (!final) return;
+  document.getElementById('sim-final').textContent = fmtFull(Math.round(final.fv));
+  document.getElementById('sim-principal').textContent = fmtFull(Math.round(final.prin));
+  document.getElementById('sim-gain').textContent = '+' + fmtFull(Math.round(final.gain));
+
+  // Badges
+  let double = data.find(d => d.fv >= principal * 2);
+  let fire = data.find(d => d.fv * 0.04 >= fireTarget * 12);
+  const badgesEl = document.getElementById('sim-badges');
+  badgesEl.innerHTML = '';
+  if (double) badgesEl.innerHTML += `<span class="pill pill-green">2倍: ${double.t}年で達成</span>`;
+  if (fire) badgesEl.innerHTML += `<span class="pill pill-blue">FIRE: ${fire.t}年目</span>`;
+
+  // Chart
+  const step = years > 15 ? 5 : 1;
+  const chartData = data.filter(d => d.t % step === 0 || d.t === years);
+  const maxFV = Math.max(...chartData.map(d=>d.fv), 1);
+  const chartEl = document.getElementById('sim-chart');
+  chartEl.innerHTML = chartData.map(d => `
+    <div class="bar-col">
+      <div class="bar-seg" style="height:${(d.gain/maxFV)*96}px;background:var(--accent);"></div>
+      <div class="bar-seg" style="height:${(d.prin/maxFV)*96}px;background:var(--bg3);"></div>
+    </div>`).join('');
+  document.getElementById('sim-chart-labels').innerHTML = chartData.map(d=>`<div style="flex:1;text-align:center;font-size:8px;color:var(--text3);white-space:nowrap;">${d.t}年</div>`).join('');
+
+  // Table
+  const tableEl = document.getElementById('sim-table');
+  tableEl.innerHTML = data.map(d=>`
+    <div class="list-row">
+      <div style="font-size:12px;color:var(--text2);width:32px;">${d.t}年</div>
+      <div style="flex:1;font-size:11px;color:var(--text2);text-align:right;">${fmt(d.prin)}</div>
+      <div style="flex:1;font-size:11px;color:var(--green);text-align:right;">+${fmt(d.gain)}</div>
+      <div style="flex:1;font-size:12px;font-weight:600;font-family:'DM Mono',monospace;text-align:right;">${fmt(d.fv)}</div>
+    </div>`).join('');
+}
+
+function loadFromAssets() {
+  const totalJPY = state.assets.reduce((s,a)=>s+jpyValue(a),0);
+  if (totalJPY === 0) { showToast('資産マスターに資産が登録されていません。'); return; }
+  const totalJPY2 = totalJPY;
+  const wavg = state.assets.length > 0
+    ? state.assets.reduce((s,a)=>s+jpyValue(a)*(a.expectedRate||0),0) / totalJPY2
+    : 5;
+  const clamped = Math.min(Math.max(totalJPY2, 100000), 50000000);
+  const rateClamped = Math.min(Math.max(wavg, 0.1), 30);
+  document.getElementById('principal-slider').value = clamped;
+  document.getElementById('rate-slider').value = rateClamped.toFixed(1);
+  updateSim();
+}
+
+function saveScenarioNamed() {
+  const nameEl = document.getElementById('scenario-name-input');
+  const name = (nameEl ? nameEl.value.trim() : '') || '新しいシナリオ ' + (state.scenarios.length+1);
+  if (nameEl) nameEl.value = '';
+  window._pendingScenarioName = name;
+  saveScenario();
+}
+function saveScenario() {
+  const principal = +document.getElementById('principal-slider').value;
+  const monthly = +document.getElementById('monthly-slider').value;
+  const rate = +document.getElementById('rate-slider').value;
+  const years = +document.getElementById('years-slider').value;
+  const fv = compound(principal, monthly, rate, years);
+  const name = window._pendingScenarioName || '新しいシナリオ ' + (state.scenarios.length+1);
+  window._pendingScenarioName = null;
+  if (state.scenarios.length >= 5) state.scenarios.shift();
+  state.scenarios.push({ id: uid(), name, principal, monthly, rate, years, fv, savedAt: today() });
+  saveState();
+  renderScenarios();
+}
+
+function renderScenarios() {
+  const el = document.getElementById('scenario-list');
+  if (state.scenarios.length === 0) {
+    el.innerHTML = '<div class="empty"><div class="empty-icon">📋</div><div class="empty-text">保存済みシナリオはありません</div></div>';
+    return;
+  }
+  el.innerHTML = [...state.scenarios].reverse().map(s => `
+    <div class="scenario-row">
+      <div>
+        <div style="font-size:13px;font-weight:500;">${s.name}</div>
+        <div style="font-size:11px;color:var(--text2);margin-top:2px;">年利${s.rate}% / ${s.years}年 / 月${fmtFull(s.monthly)}</div>
+        <div style="font-size:14px;font-weight:700;color:var(--accent);font-family:'DM Mono',monospace;margin-top:3px;">${fmtFull(Math.round(s.fv))}</div>
+      </div>
+      <div style="display:flex;flex-direction:column;gap:6px;align-items:flex-end;">
+        <button class="scenario-load" onclick="loadScenario('${s.id}')">読込</button>
+        <button class="delete-btn" style="font-size:14px;" onclick="deleteScenario('${s.id}')">×</button>
+      </div>
+    </div>`).join('');
+}
+
+function loadScenario(id) {
+  const s = state.scenarios.find(x=>x.id===id);
+  if (!s) return;
+  document.getElementById('principal-slider').value = s.principal;
+  document.getElementById('monthly-slider').value = s.monthly;
+  document.getElementById('rate-slider').value = s.rate;
+  document.getElementById('years-slider').value = s.years;
+  updateSim();
+  switchSimTab(0);
+}
+
+function deleteScenario(id) {
+  state.scenarios = state.scenarios.filter(x=>x.id!==id);
+  saveState(); renderScenarios();
+}
+
+function switchSimTab(i) {
+  document.querySelectorAll('#screen-4 .sub-tab').forEach((t,j)=>t.classList.toggle('active',j===i));
+  document.getElementById('sim-tab-0').style.display = i===0?'block':'none';
+  document.getElementById('sim-tab-1').style.display = i===1?'block':'none';
+  if (i===1) renderScenarios();
+}
+
+function goToSimulator() { switchTab(4); }
+
+// ============================================================
+// SAVE DATA
+// ============================================================
+function saveAsset() {
+  const name = document.getElementById('asset-name').value.trim();
+  const balance = +document.getElementById('asset-balance').value;
+  if (!name || !balance) { showToast('資産名と残高を入力してください'); return; }
+  const data = {
+    name, category: document.getElementById('asset-category').value,
+    balance, currency: document.getElementById('asset-currency').value,
+    jpyRate: 1,
+    expectedRate: +document.getElementById('asset-rate').value || 0,
+    memo: document.getElementById('asset-memo').value,
+    updatedAt: today()
+  };
+  if (editingId.assets) {
+    const idx = state.assets.findIndex(x=>x.id===editingId.assets);
+    if (idx !== -1) state.assets[idx] = { ...state.assets[idx], ...data };
+    resetModal('modal-asset', 'assets', '資産を追加', '追加する');
+  } else {
+    state.assets.push({ id: uid(), ...data });
+  }
+  saveState(); closeModal('modal-asset');
+  document.getElementById('asset-name').value='';
+  document.getElementById('asset-balance').value='';
+  document.getElementById('asset-rate').value='';
+  document.getElementById('asset-memo').value='';
+  renderAll();
+}
+
+function saveCashflow() {
+  const title = document.getElementById('cf-title').value.trim();
+  const amount = +document.getElementById('cf-amount').value;
+  if (!title || !amount) { showToast('内容と金額を入力してください'); return; }
+  const data = {
+    title, amount,
+    type: document.getElementById('cf-type').value,
+    segment: document.getElementById('cf-segment').value,
+    date: document.getElementById('cf-date').value
+  };
+  if (editingId.cashflows) {
+    const idx = state.cashflows.findIndex(x=>x.id===editingId.cashflows);
+    if (idx !== -1) state.cashflows[idx] = { ...state.cashflows[idx], ...data };
+    resetModal('modal-cashflow', 'cashflows', '収支を記録', '記録する');
+  } else {
+    state.cashflows.push({ id: uid(), ...data });
+  }
+  saveState(); closeModal('modal-cashflow');
+  document.getElementById('cf-title').value='';
+  document.getElementById('cf-amount').value='';
+  renderAll();
+}
+
+function saveLife() {
+  const title = document.getElementById('life-title').value.trim();
+  const amount = +document.getElementById('life-amount').value;
+  if (!title) { showToast('項目名を入力してください'); return; }
+  const data = {
+    name: title, title,
+    category: document.getElementById('life-category').value,
+    amount, satisfaction: state.currentStar || 3,
+    insight: document.getElementById('life-insight').value,
+    date: document.getElementById('life-date').value
+  };
+  if (editingId.lifeInvestments) {
+    const idx = state.lifeInvestments.findIndex(x=>x.id===editingId.lifeInvestments);
+    if (idx !== -1) state.lifeInvestments[idx] = { ...state.lifeInvestments[idx], ...data };
+    resetModal('modal-life', 'lifeInvestments', 'ライフ投資を記録', '記録する');
+  } else {
+    state.lifeInvestments.push({ id: uid(), ...data });
+  }
+  saveState(); closeModal('modal-life');
+  document.getElementById('life-title').value='';
+  document.getElementById('life-amount').value='';
+  document.getElementById('life-insight').value='';
+  setStar(0);
+  renderAll();
+}
+
+function saveDebt() {
+  const name = document.getElementById('debt-name').value.trim();
+  const balance = +document.getElementById('debt-balance').value;
+  if (!name || !balance) { showToast('負債名と残高を入力してください'); return; }
+  const data = {
+    name, category: document.getElementById('debt-category').value,
+    balance, originalAmount: +document.getElementById('debt-original').value || balance,
+    interestRate: +document.getElementById('debt-rate').value || 0,
+    monthlyPayment: +document.getElementById('debt-monthly').value || 0,
+    remainingPayments: +document.getElementById('debt-remaining').value || 0,
+    memo: document.getElementById('debt-memo').value
+  };
+  if (editingId.debts) {
+    const idx = state.debts.findIndex(x=>x.id===editingId.debts);
+    if (idx !== -1) state.debts[idx] = { ...state.debts[idx], ...data };
+    resetModal('modal-debt', 'debts', '負債を登録', '登録する');
+  } else {
+    state.debts.push({ id: uid(), ...data });
+  }
+  saveState(); closeModal('modal-debt');
+  ['debt-name','debt-balance','debt-original','debt-rate','debt-monthly','debt-remaining','debt-memo'].forEach(id=>document.getElementById(id).value='');
+  renderAll();
+}
+
+// ============================================================
+// EDIT FUNCTIONS
+// ============================================================
+let editingId = { assets: null, cashflows: null, lifeInvestments: null, debts: null };
+
+function editAsset(id) {
+  const a = state.assets.find(x=>x.id===id);
+  if (!a) return;
+  editingId.assets = id;
+  document.getElementById('asset-name').value = a.name;
+  document.getElementById('asset-category').value = a.category;
+  document.getElementById('asset-balance').value = a.balance;
+  document.getElementById('asset-currency').value = a.currency;
+  document.getElementById('asset-rate').value = a.expectedRate;
+  document.getElementById('asset-memo').value = a.memo || '';
+  document.querySelector('#modal-asset .sheet-title').textContent = '資産を編集';
+  document.querySelector('#modal-asset .form-btn').textContent = '更新する';
+  openModal('modal-asset');
+}
+
+function editCashflow(id) {
+  const c = state.cashflows.find(x=>x.id===id);
+  if (!c) return;
+  editingId.cashflows = id;
+  document.getElementById('cf-title').value = c.title;
+  document.getElementById('cf-type').value = c.type;
+  document.getElementById('cf-segment').value = c.segment;
+  document.getElementById('cf-amount').value = c.amount;
+  document.getElementById('cf-date').value = c.date || today();
+  document.querySelector('#modal-cashflow .sheet-title').textContent = '収支を編集';
+  document.querySelector('#modal-cashflow .form-btn').textContent = '更新する';
+  openModal('modal-cashflow');
+}
+
+function editLife(id) {
+  const l = state.lifeInvestments.find(x=>x.id===id);
+  if (!l) return;
+  editingId.lifeInvestments = id;
+  document.getElementById('life-title').value = l.name || l.title;
+  document.getElementById('life-category').value = l.category;
+  document.getElementById('life-amount').value = l.amount;
+  document.getElementById('life-insight').value = l.insight || '';
+  document.getElementById('life-date').value = l.date || today();
+  setStar(l.satisfaction || 3);
+  document.querySelector('#modal-life .sheet-title').textContent = 'ライフ投資を編集';
+  document.querySelector('#modal-life .form-btn').textContent = '更新する';
+  openModal('modal-life');
+}
+
+function editDebt(id) {
+  const d = state.debts.find(x=>x.id===id);
+  if (!d) return;
+  editingId.debts = id;
+  document.getElementById('debt-name').value = d.name;
+  document.getElementById('debt-category').value = d.category;
+  document.getElementById('debt-balance').value = d.balance;
+  document.getElementById('debt-original').value = d.originalAmount || d.balance;
+  document.getElementById('debt-rate').value = d.interestRate;
+  document.getElementById('debt-monthly').value = d.monthlyPayment;
+  document.getElementById('debt-remaining').value = d.remainingPayments;
+  document.getElementById('debt-memo').value = d.memo || '';
+  document.querySelector('#modal-debt .sheet-title').textContent = '負債を編集';
+  document.querySelector('#modal-debt .form-btn').textContent = '更新する';
+  openModal('modal-debt');
+}
+
+function resetModal(modalId, storeKey, titleText, btnText) {
+  editingId[storeKey] = null;
+  document.querySelector(`#${modalId} .sheet-title`).textContent = titleText;
+  document.querySelector(`#${modalId} .form-btn`).textContent = btnText;
+}
+
+
+
+function deleteItem(store, id) {
+  showConfirm('削除しますか？', () => {
+    state[store] = state[store].filter(x=>x.id!==id);
+    saveState(); renderAll();
+  });
+}
+
+
+function setTemplate(type) {
+  if (type==='income') { document.getElementById('cf-type').value='収入'; document.getElementById('cf-segment').value='事業'; }
+  else if (type==='expense') { document.getElementById('cf-type').value='支出'; document.getElementById('cf-segment').value='個人'; }
+  else if (type==='invest') { document.getElementById('cf-type').value='支出'; document.getElementById('cf-segment').value='投資'; }
+}
+
+// ============================================================
+// STARS
+// ============================================================
+function setStar(n) {
+  state.currentStar = n;
+  document.querySelectorAll('.star').forEach((s,i)=>s.classList.toggle('active',i<n));
+}
+
+// ============================================================
+// SETTINGS
+// ============================================================
+function saveRates() {
+  state.rates.ETH = +document.getElementById('eth-rate').value || state.rates.ETH;
+  state.rates.USD = +document.getElementById('usd-rate').value || state.rates.USD;
+  saveState(); renderAll();
+}
+
+function exportData() {
+  const blob = new Blob([JSON.stringify(state, null, 2)], {type:'application/json'});
+  const a = document.createElement('a');
+  a.href = URL.createObjectURL(blob);
+  a.download = '資産管理データ_' + today() + '.json';
+  a.click();
+}
+
+function importData(e) {
+  const file = e.target.files[0];
+  if (!file) return;
+  const reader = new FileReader();
+  reader.onload = ev => {
+    try {
+      const imported = JSON.parse(ev.target.result);
+      Object.assign(state, imported);
+      saveState(); renderAll();
+      showToast('インポートが完了しました');
+    } catch { showToast('ファイルの読み込みに失敗しました'); }
+  };
+  reader.readAsText(file);
+}
+
+function confirmClear() {
+  showConfirm('全データを削除しますか？\nこの操作は取り消せません。', () => {
+    state.assets=[]; state.cashflows=[]; state.lifeInvestments=[]; state.debts=[]; state.scenarios=[];
+    saveState(); renderAll();
+  });
+}
+
+// ============================================================
+// TAX CALCULATIONS
+// ============================================================
+
+function switchTaxTab(i) {
+  document.querySelectorAll('#tax-sub-tabs .sub-tab').forEach((t,j)=>t.classList.toggle('active',j===i));
+  ['tax-tab-0','tax-tab-1','tax-tab-2','tax-tab-3','tax-tab-4'].forEach((id,j)=>{
+    document.getElementById(id).style.display = j===i?'block':'none';
+  });
+}
+
+let taxMode = 'personal';
+function setTaxMode(mode) {
+  taxMode = mode;
+  document.getElementById('mode-personal').style.cssText = mode==='personal'
+    ? 'flex:1;text-align:center;padding:7px;border-radius:8px;font-size:12px;cursor:pointer;background:var(--bg2);color:var(--text);font-weight:500;transition:all 0.2s;'
+    : 'flex:1;text-align:center;padding:7px;border-radius:8px;font-size:12px;cursor:pointer;color:var(--text2);transition:all 0.2s;';
+  document.getElementById('mode-business').style.cssText = mode==='business'
+    ? 'flex:1;text-align:center;padding:7px;border-radius:8px;font-size:12px;cursor:pointer;background:var(--bg2);color:var(--text);font-weight:500;transition:all 0.2s;'
+    : 'flex:1;text-align:center;padding:7px;border-radius:8px;font-size:12px;cursor:pointer;color:var(--text2);transition:all 0.2s;';
+  document.getElementById('preset-bar-business').style.display = mode==='business'?'block':'none';
+  // Update usage default in transfer tax
+  const usageEl = document.getElementById('tax-usage');
+  if (mode==='business') usageEl.value = 'business';
+  else usageEl.value = 'residence';
+  // Show/hide loan deduction section
+  const loanSection = document.getElementById('biz-loan-deduction-section');
+  if (loanSection) loanSection.style.display = mode==='personal'?'block':'none';
+  calcTransferTax();
+}
+
+// --- PRESET NAME EDITING ---
+function loadPresetLabels() {
+  const r = localStorage.getItem('preset-label-roastery');
+  const l = localStorage.getItem('preset-label-lodging');
+  if (r) { document.getElementById('label-roastery').textContent = r; document.getElementById('input-roastery').value = r; }
+  if (l) { document.getElementById('label-lodging').textContent = l; document.getElementById('input-lodging').value = l; }
+}
+
+function updatePresetLabel(type) {
+  const val = document.getElementById('input-' + type).value.trim();
+  const display = val || (type === 'roastery' ? 'ロースタリー' : '宿泊施設');
+  document.getElementById('label-' + type).textContent = display;
+  localStorage.setItem('preset-label-' + type, display);
+}
+
+function togglePresetEdit() {
+  const panel = document.getElementById('preset-edit-panel');
+  const display = document.getElementById('preset-display');
+  const btn = document.getElementById('preset-edit-btn');
+  const isEditing = panel.style.display === 'block';
+  panel.style.display = isEditing ? 'none' : 'block';
+  display.style.display = isEditing ? 'flex' : 'none';
+  btn.textContent = isEditing ? '✏️ 名前を編集' : '✕ 閉じる';
+}
+
+
+function applyPreset(type) {
+  if (type==='roastery') {
+    document.getElementById('biz-dep-type').value = '22';
+    document.getElementById('biz-building').value = '20000000';
+    document.getElementById('biz-building-excl').value = '20000000';
+    document.getElementById('biz-taxable-ratio').value = '1.0';
+    document.getElementById('prop-land-val').value = '10000000';
+    document.getElementById('prop-building-val').value = '8000000';
+    document.getElementById('prop-land-type').value = 'other';
+  } else if (type==='lodging') {
+    document.getElementById('biz-dep-type').value = '47';
+    document.getElementById('biz-building').value = '50000000';
+    document.getElementById('biz-building-excl').value = '50000000';
+    document.getElementById('biz-taxable-ratio').value = '0.8';
+    document.getElementById('prop-land-val').value = '20000000';
+    document.getElementById('prop-building-val').value = '25000000';
+    document.getElementById('prop-land-type').value = 'other';
+  } else if (type==='land') {
+    document.getElementById('biz-building').value = '0';
+    document.getElementById('prop-land-val').value = '30000000';
+    document.getElementById('prop-building-val').value = '0';
+    document.getElementById('prop-land-type').value = 'other';
+  }
+  calcBizTax();
+  calcConsumptionTaxRefund();
+  calcPropertyTax();
+  switchTaxTab(4);
+}
+
+// --- BUSINESS TAX: 減価償却経費節税 ---
+function calcBizTax() {
+  const building = +document.getElementById('biz-building').value || 0;
+  const life = +document.getElementById('biz-dep-type').value;
+  const rate = +document.getElementById('biz-tax-rate').value;
+  if (building === 0) { document.getElementById('biz-dep-result').style.display='none'; return; }
+  const annualDep = Math.round(building / life);
+  const annualSaving = Math.round(annualDep * rate);
+  const totalSaving = annualSaving * life;
+  document.getElementById('biz-dep-result').style.display = 'block';
+  document.getElementById('biz-r-life').textContent = life + '年';
+  document.getElementById('biz-r-dep').textContent = fmtFull(annualDep) + ' / 年';
+  document.getElementById('biz-r-saving').textContent = fmtFull(annualSaving) + ' / 年';
+  document.getElementById('biz-r-total-saving').textContent = fmtFull(totalSaving);
+}
+
+// --- CONSUMPTION TAX REFUND ---
+function calcConsumptionTaxRefund() {
+  const building = +document.getElementById('biz-building-excl').value || 0;
+  const ratio = +document.getElementById('biz-taxable-ratio').value;
+  if (building === 0) { document.getElementById('biz-ct-result').style.display='none'; return; }
+  const ct = building * 0.10;
+  const refund = Math.round(ct * ratio);
+  document.getElementById('biz-ct-result').style.display = 'block';
+  document.getElementById('biz-r-ct-base').textContent = fmtFull(Math.round(ct));
+  document.getElementById('biz-r-ct-ratio').textContent = (ratio*100).toFixed(0) + '%';
+  document.getElementById('biz-r-ct-refund').textContent = fmtFull(refund);
+}
+
+// --- HOUSING LOAN DEDUCTION ---
+function calcLoanDeduction() {
+  const balance = +document.getElementById('loan-balance-ctrl').value || 0;
+  const type = document.getElementById('loan-house-type').value;
+  if (balance === 0) { document.getElementById('loan-result').style.display='none'; return; }
+  const caps = { 'new-zeh':45000000,'new-standard':40000000,'new-other':30000000,'used-zeh':30000000,'used-other':20000000 };
+  const cap = caps[type];
+  const base = Math.min(balance, cap);
+  const annual = Math.round(base * 0.007);
+  const total = annual * 13;
+  document.getElementById('loan-result').style.display = 'block';
+  document.getElementById('loan-r-base').textContent = fmtFull(base) + '（上限 ' + fmtFull(cap) + '）';
+  document.getElementById('loan-r-annual').textContent = fmtFull(annual);
+  document.getElementById('loan-r-period').textContent = '最大13年';
+  document.getElementById('loan-r-total').textContent = fmtFull(total);
+}
+
+
+
+// --- TAX TAB 0: 譲渡所得税 ---
+function calcTransferTax() {
+  const sell = +document.getElementById('tax-sell-price').value || 0;
+  const costInput = +document.getElementById('tax-cost').value || 0;
+  const transferCost = +document.getElementById('tax-transfer-cost').value || 0;
+  const period = document.getElementById('tax-period').value;
+  const usage = document.getElementById('tax-usage').value;
+  const special = document.getElementById('tax-special').value;
+
+  // Show/hide special deduction group
+  const sdGroup = document.getElementById('special-deduction-group');
+  sdGroup.style.display = usage === 'residence' ? 'block' : 'none';
+
+  if (sell === 0) { document.getElementById('tax-result-card').style.display='none'; return; }
+
+  // 取得費：不明なら概算取得費（売却価格の5%）
+  const cost = costInput > 0 ? costInput : sell * 0.05;
+  const usedEstimate = costInput === 0;
+
+  // 譲渡所得 = 売却価格 - 取得費 - 譲渡費用
+  let transferIncome = sell - cost - transferCost;
+
+  // 特別控除
+  let deduction = 0;
+  if (usage === 'residence') {
+    if (special === '3000') deduction = Math.min(transferIncome, 30000000);
+    else deduction = 0;
+  }
+
+  let taxableIncome = Math.max(0, transferIncome - deduction);
+
+  // 税率
+  let incomeTaxRate, residentTaxRate;
+  if (period === 'long') {
+    if (usage === 'residence' && special === 'light') {
+      // 10年超所有の軽減税率（課税所得6000万円まで14.21%、超過は20.315%）
+      if (taxableIncome <= 60000000) { incomeTaxRate = 0.10; residentTaxRate = 0.04; }
+      else { incomeTaxRate = 0.15; residentTaxRate = 0.05; }
+    } else {
+      incomeTaxRate = 0.15; residentTaxRate = 0.05;
+    }
+  } else {
+    incomeTaxRate = 0.30; residentTaxRate = 0.09;
+  }
+
+  const recoveryRate = 0.021; // 復興特別所得税 = 所得税 × 2.1%
+  const incomeTax = Math.floor(taxableIncome * incomeTaxRate);
+  const recoveryTax = Math.floor(incomeTax * recoveryRate);
+  const residentTax = Math.floor(taxableIncome * residentTaxRate);
+  const totalTax = incomeTax + recoveryTax + residentTax;
+  const netAmount = sell - totalTax - transferCost;
+
+  // Display
+  document.getElementById('tax-result-card').style.display = 'block';
+  document.getElementById('tr-sell').textContent = fmtFull(sell);
+  document.getElementById('tr-cost').textContent = fmtFull(cost) + (usedEstimate ? '（概算5%）' : '');
+  document.getElementById('tr-tcost').textContent = fmtFull(transferCost);
+  document.getElementById('tr-deduction').textContent = deduction > 0 ? '−' + fmtFull(deduction) : '０円';
+  document.getElementById('tr-taxable').textContent = fmtFull(taxableIncome);
+  document.getElementById('tr-income-tax').textContent = fmtFull(incomeTax) + '（' + (incomeTaxRate*100).toFixed(0) + '%）';
+  document.getElementById('tr-recovery-tax').textContent = fmtFull(recoveryTax) + '（2.1%）';
+  document.getElementById('tr-resident-tax').textContent = fmtFull(residentTax) + '（' + (residentTaxRate*100).toFixed(0) + '%）';
+  document.getElementById('tr-total-tax').textContent = fmtFull(totalTax);
+  document.getElementById('tr-net').textContent = fmtFull(netAmount);
+
+  const noteEl = document.getElementById('tr-note');
+  if (transferIncome < 0) {
+    noteEl.style.display = 'block';
+    noteEl.textContent = '⚠️ 譲渡損失（' + fmtFull(Math.abs(transferIncome)) + '）が発生しています。居住用の場合、損失の繰越控除特例が使える場合があります。税理士にご相談ください。';
+  } else if (usedEstimate) {
+    noteEl.style.display = 'block';
+    noteEl.textContent = '⚠️ 取得費が不明なため、売却価格の5%（概算取得費）を使用しました。購入当時の書類が見つかれば税負担を大幅に下げられる可能性があります。';
+  } else { noteEl.style.display = 'none'; }
+}
+
+// --- TAX TAB 1: 減価償却 ---
+function calcDepreciation() {
+  const building = +document.getElementById('dep-building').value || 0;
+  const land = +document.getElementById('dep-land').value || 0;
+  const usefulLife = +document.getElementById('dep-type').value;
+  const usage = document.getElementById('dep-usage').value;
+  const years = +document.getElementById('dep-years').value || 0;
+  const misc = +document.getElementById('dep-misc').value || 0;
+
+  if (building === 0 || years === 0) { document.getElementById('dep-result').style.display='none'; return; }
+
+  // 旧定額法（個人の場合は取得年によるが、2007年以前取得物件は旧定額法が多い）
+  // 非事業用：耐用年数の1.5倍の年数で、0.9 × 建物価格で計算
+  let annualDep, totalDep, buildingNow;
+
+  if (usage === 'personal') {
+    // 非事業用：建物価格 × 0.9 / 耐用年数
+    const adjustedLife = Math.ceil(usefulLife * 1.5);
+    annualDep = (building * 0.9) / adjustedLife;
+    totalDep = Math.min(annualDep * years, building * 0.9);
+    buildingNow = Math.max(building - totalDep, building * 0.1);
+  } else {
+    // 事業用（定額法）：建物価格 / 耐用年数
+    annualDep = building / usefulLife;
+    totalDep = Math.min(annualDep * years, building - 1);
+    buildingNow = Math.max(building - totalDep, 1);
+  }
+
+  const totalCost = land + buildingNow + misc;
+
+  document.getElementById('dep-result').style.display = 'block';
+  document.getElementById('dep-r-building').textContent = fmtFull(building);
+  document.getElementById('dep-r-rate').textContent = (1/usefulLife*100).toFixed(2) + '%（耐用年数' + usefulLife + '年）';
+  document.getElementById('dep-r-years').textContent = years + '年';
+  document.getElementById('dep-r-total').textContent = '−' + fmtFull(Math.round(totalDep));
+  document.getElementById('dep-r-building-now').textContent = fmtFull(Math.round(buildingNow));
+  document.getElementById('dep-r-total-cost').textContent = fmtFull(Math.round(totalCost));
+
+  // Store for cross-tab use
+  window._depTotalCost = Math.round(totalCost);
+}
+
+function copyToTransfer() {
+  if (!window._depTotalCost) return;
+  document.getElementById('tax-cost').value = window._depTotalCost;
+  switchTaxTab(0);
+  calcTransferTax();
+}
+
+// --- TAX TAB 2: 購入諸費用 ---
+function calcPurchaseCost() {
+  const price = +document.getElementById('pur-price').value || 0;
+  const land = +document.getElementById('pur-land').value || 0;
+  const building = +document.getElementById('pur-building').value || 0;
+  const usage = document.getElementById('pur-usage').value;
+  const isNew = document.getElementById('pur-new').value === 'new';
+  const loan = +document.getElementById('pur-loan').value || 0;
+
+  if (price === 0) { document.getElementById('pur-result').style.display='none'; return; }
+
+  // 不動産取得税（評価額≒価格の70%として概算）
+  const landAssessed = land * 0.7;
+  const buildingAssessed = building * 0.6;
+  let acqLand, acqBuilding;
+  if (usage === 'residence') {
+    // 居住用：土地は評価額1/2 × 3%、建物は新築1200万控除後3%
+    acqLand = Math.max(0, (landAssessed / 2) * 0.03);
+    const buildingBase = isNew ? Math.max(0, buildingAssessed - 12000000) : buildingAssessed;
+    acqBuilding = buildingBase * 0.03;
+  } else {
+    acqLand = landAssessed * 0.03;
+    acqBuilding = buildingAssessed * 0.04;
+  }
+
+  // 登録免許税
+  let regTaxRate = usage === 'residence' ? (isNew ? 0.0015 : 0.002) : 0.02;
+  const regTax = price * regTaxRate;
+  const mortgageTax = loan > 0 ? loan * 0.0004 : 0;
+
+  // 印紙税（売買契約書）
+  let stampTax = 0;
+  if (price <= 1000000) stampTax = 500;
+  else if (price <= 5000000) stampTax = 1000;
+  else if (price <= 10000000) stampTax = 5000;
+  else if (price <= 50000000) stampTax = 10000;
+  else if (price <= 100000000) stampTax = 30000;
+  else stampTax = 60000;
+
+  // 仲介手数料（上限）
+  let agentFee = 0;
+  if (price <= 2000000) agentFee = price * 0.05 + 0;
+  else if (price <= 4000000) agentFee = price * 0.04 + 20000;
+  else agentFee = price * 0.03 + 60000;
+  agentFee = agentFee * 1.1; // 消費税
+
+  const total = acqLand + acqBuilding + regTax + mortgageTax + stampTax + agentFee;
+
+  document.getElementById('pur-result').style.display = 'block';
+  document.getElementById('pur-r-acq-land').textContent = fmtFull(Math.round(acqLand));
+  document.getElementById('pur-r-acq-building').textContent = fmtFull(Math.round(acqBuilding));
+  document.getElementById('pur-r-reg').textContent = fmtFull(Math.round(regTax));
+  document.getElementById('pur-r-mortgage').textContent = loan > 0 ? fmtFull(Math.round(mortgageTax)) : '—（ローンなし）';
+  document.getElementById('pur-r-stamp').textContent = fmtFull(stampTax);
+  document.getElementById('pur-r-agent').textContent = fmtFull(Math.round(agentFee)) + '（税込）';
+  document.getElementById('pur-r-total').textContent = fmtFull(Math.round(total));
+  document.getElementById('pur-r-grand').textContent = fmtFull(price + Math.round(total));
+}
+
+// --- TAX TAB 3: 固定資産税 ---
+function calcPropertyTax() {
+  const landVal = +document.getElementById('prop-land-val').value || 0;
+  const buildingVal = +document.getElementById('prop-building-val').value || 0;
+  const landType = document.getElementById('prop-land-type').value;
+  const cityPlan = document.getElementById('prop-city-plan').value === 'yes';
+  const newHouse = document.getElementById('prop-new-house').value === 'yes';
+
+  if (landVal === 0 && buildingVal === 0) { document.getElementById('prop-result').style.display='none'; return; }
+
+  // 土地の課税標準額（住宅用地の軽減）
+  let landBase;
+  if (landType === 'small') landBase = landVal / 6;
+  else if (landType === 'general') landBase = landVal / 3;
+  else landBase = landVal;
+
+  // 都市計画税の土地課税標準（小規模1/3、一般2/3）
+  let landCityBase;
+  if (landType === 'small') landCityBase = landVal / 3;
+  else if (landType === 'general') landCityBase = landVal * 2/3;
+  else landCityBase = landVal;
+
+  const buildingBase = buildingVal;
+
+  // 固定資産税（1.4%）
+  let fixLand = Math.round(landBase * 0.014);
+  let fixBuilding = Math.round(buildingBase * 0.014);
+  if (newHouse) fixBuilding = Math.round(fixBuilding / 2); // 新築特例 1/2
+
+  // 都市計画税（0.3%）
+  let cityLand = cityPlan ? Math.round(landCityBase * 0.003) : 0;
+  let cityBuilding = cityPlan ? Math.round(buildingBase * 0.003) : 0;
+
+  const annual = fixLand + fixBuilding + cityLand + cityBuilding;
+  const monthly = Math.round(annual / 12);
+
+  document.getElementById('prop-result').style.display = 'block';
+  document.getElementById('prop-r-land-base').textContent = fmtFull(Math.round(landBase)) + (landType !== 'other' ? '（軽減後）' : '');
+  document.getElementById('prop-r-building-base').textContent = fmtFull(buildingBase);
+  document.getElementById('prop-r-fix-land').textContent = fmtFull(fixLand);
+  document.getElementById('prop-r-fix-building').textContent = fmtFull(fixBuilding) + (newHouse ? '（新築特例1/2）' : '');
+  document.getElementById('prop-r-city-land').textContent = cityPlan ? fmtFull(cityLand) : '対象外';
+  document.getElementById('prop-r-city-building').textContent = cityPlan ? fmtFull(cityBuilding) : '対象外';
+  document.getElementById('prop-r-annual').textContent = fmtFull(annual);
+  document.getElementById('prop-r-monthly').textContent = fmtFull(monthly) + ' / 月';
+}
+
+
+// swipe removed — using inline buttons
+
+loadState();
+document.getElementById('eth-rate').value = state.rates.ETH;
+document.getElementById('usd-rate').value = state.rates.USD;
+loadPresetLabels();
+renderAll();
+updateSim();
+
+// ── TOAST ──────────────────────────────────────────────────────────────────
+let _toastTimer;
+function showToast(msg) {
+  const el = document.getElementById('toast');
+  el.textContent = msg;
+  el.style.display = 'block';
+  el.style.opacity = '1';
+  clearTimeout(_toastTimer);
+  _toastTimer = setTimeout(() => {
+    el.style.opacity = '0';
+    setTimeout(() => el.style.display = 'none', 300);
+  }, 2500);
+}
+
+// ── CONFIRM ────────────────────────────────────────────────────────────────
+let _confirmCb;
+function showConfirm(msg, cb) {
+  _confirmCb = cb;
+  document.getElementById('confirm-msg').textContent = msg;
+  const ov = document.getElementById('confirm-overlay');
+  ov.style.display = 'flex';
+  ov.style.alignItems = 'center';
+  ov.style.justifyContent = 'center';
+}
+function confirmCancel() {
+  document.getElementById('confirm-overlay').style.display = 'none';
+  _confirmCb = null;
+}
+function confirmOK() {
+  document.getElementById('confirm-overlay').style.display = 'none';
+  if (_confirmCb) { _confirmCb(); _confirmCb = null; }
+}
+// confirm-ok uses inline onclick
+
+// ============================================================
+// SERVICE WORKER — 強制キャッシュクリア
+// ============================================================
+if ('serviceWorker' in navigator) {
+  // 既存のService Workerを全て削除
+  navigator.serviceWorker.getRegistrations().then(regs => {
+    regs.forEach(reg => reg.unregister());
+  });
+}
+
+// キャッシュAPIを全削除
+if ('caches' in window) {
+  caches.keys().then(keys => {
+    keys.forEach(key => caches.delete(key));
+  });
+}
+</script>
+
+<!-- TOAST NOTIFICATION -->
+<div id="toast" style="display:none;position:fixed;top:calc(var(--safe-top) + 60px);left:50%;transform:translateX(-50%);background:rgba(30,30,40,0.96);color:var(--text);padding:10px 20px;border-radius:24px;font-size:13px;z-index:100;white-space:nowrap;box-shadow:0 4px 20px rgba(0,0,0,0.5);border:1px solid var(--border);backdrop-filter:blur(10px);pointer-events:none;transition:opacity 0.3s;"></div>
+
+<!-- CONFIRM DIALOG -->
+<div id="confirm-overlay" style="display:none;position:fixed;top:0;left:0;right:0;bottom:0;background:rgba(0,0,0,0.75);z-index:99;justify-content:center;align-items:center;">
+  <div style="background:var(--bg2);border:1px solid var(--border);border-radius:20px;padding:24px 20px;margin:20px;max-width:340px;width:100%;">
+    <div id="confirm-msg" style="font-size:14px;line-height:1.6;text-align:center;margin-bottom:20px;white-space:pre-line;"></div>
+    <div style="display:flex;gap:10px;">
+      <button onclick="confirmCancel()" style="flex:1;padding:13px;border-radius:12px;border:1px solid var(--border);background:var(--bg3);color:var(--text);font-size:14px;font-family:'Noto Sans JP',sans-serif;cursor:pointer;">キャンセル</button>
+      <button onclick="confirmOK()" style="flex:1;padding:13px;border-radius:12px;border:none;background:var(--red);color:white;font-size:14px;font-weight:600;font-family:'Noto Sans JP',sans-serif;cursor:pointer;">削除する</button>
+    </div>
+  </div>
+</div>
+</body>
+</html>
